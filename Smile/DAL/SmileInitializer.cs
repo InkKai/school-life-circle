@@ -17,6 +17,13 @@ namespace Smile.DAL
         /// </summary>
         public override void InitializeDatabase(SmileContext context)
         {
+            SmileDbConfiguration.SuspendExecutionStrategy = true;
+            try { InitializeCore(context); }
+            finally { SmileDbConfiguration.SuspendExecutionStrategy = false; }
+        }
+
+        private void InitializeCore(SmileContext context)
+        {
             if (context.Database.Exists() &&
                 context.Database.SqlQuery<int>("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'").Single() == 0)
             {

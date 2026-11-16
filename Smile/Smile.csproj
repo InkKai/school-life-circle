@@ -252,6 +252,7 @@
     <Compile Include="Controllers\MyCouponsController.cs" />
     <Compile Include="Controllers\StoresController.cs" />
     <Compile Include="DAL\SmileContext.cs" />
+    <Compile Include="DAL\SmileDbConfiguration.cs" />
     <Compile Include="DAL\SmileInitializer.cs" />
     <Compile Include="Infrastructure\BaseController.cs" />
     <Compile Include="Infrastructure\Security.cs" />
@@ -307,7 +308,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Data\osm_stores.json" />
-    <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.rtl.min.css.map" />
