@@ -1,0 +1,54 @@
+﻿@model StoreListItem
+@{
+    var s = Model.Store;
+    var cat = s.Category;
+}
+<article class="store-card">
+    <div class="thumb" style="background:@Ui.Tint(cat)">
+        @Ui.Art(s, "store-art")
+        @if (Model.ActiveCoupons > 0)
+        {
+            <span class="tag chip chip-brand">@Model.ActiveCoupons 張優惠</span>
+        }
+        else if (s.DataSource == DataSources.Osm)
+        {
+            <span class="tag chip chip-osm">真實店家</span>
+        }
+        @if (Model.DistanceMeters.HasValue)
+        {
+            <span class="dist">步行 @Geo.WalkMinutes(Model.DistanceMeters.Value) 分</span>
+        }
+    </div>
+    <div class="body">
+        <h3><a class="stretched-link" href="@Url.Action("Details", "Stores", new { id = s.Id })">@s.Name</a></h3>
+        <p class="meta mb-2">
+            @(cat != null ? cat.Name : "")
+            @if (!string.IsNullOrEmpty(s.Cuisine))
+            {
+                <text>・@s.Cuisine</text>
+            }
+            @if (Model.DistanceMeters.HasValue)
+            {
+                <text>・@Geo.Format(Model.DistanceMeters.Value)</text>
+            }
+        </p>
+        <div class="d-flex flex-wrap gap-1">
+            @if (Model.AverageRating.HasValue)
+            {
+                <span class="chip chip-soft">★ @Model.AverageRating.Value.ToString("0.0")</span>
+            }
+            @if (s.AccessibilityKnown && (s.StepFreeEntrance || s.HasRamp))
+            {
+                <span class="chip chip-green">輪椅可進入</span>
+            }
+            @if (s.IsDemo)
+            {
+                <span class="chip chip-gray">示範店家</span>
+            }
+            @if (!string.IsNullOrEmpty(s.OpenHours))
+            {
+                <span class="chip chip-gray">有營業時間</span>
+            }
+        </div>
+    </div>
+</article>

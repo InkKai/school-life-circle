@@ -1,0 +1,138 @@
+﻿@{
+    var large = Request.Cookies["textsize"] != null && Request.Cookies["textsize"].Value == "large";
+    var isMerchant = User.IsInRole(AppRoles.Merchant);
+    var isAdmin = User.IsInRole(AppRoles.Admin);
+    var ctrl = ViewContext.RouteData.Values["controller"].ToString();
+    var act = ViewContext.RouteData.Values["action"].ToString();
+    Func<string, string, string> navCls = (c, a) => ctrl == c && (a == null || act == a) ? "active" : "";
+    // 分享到 LINE、Facebook 時的預覽文字與圖片
+    var desc = (string)ViewBag.Description ?? "臺中科大、臺中一中、臺體大周邊的店家與優惠。領券、集點、送好友，零抽成。";
+    var ogImage = new Uri(Request.Url, Url.Content((string)ViewBag.OgImage ?? "~/Content/img/og-image.png")).ToString();
+}
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#C2410C">
+    <meta name="description" content="@desc">
+    <meta property="og:site_name" content="學區生活圈">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="@ViewBag.Title - 學區生活圈">
+    <meta property="og:description" content="@desc">
+    <meta property="og:image" content="@ogImage">
+    <link rel="manifest" href="@Url.Content("~/manifest.json")">
+    <link rel="icon" href="@Url.Content("~/favicon.ico")" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="@Url.Content("~/Content/img/app/favicon-32.png")">
+    <link rel="apple-touch-icon" href="@Url.Content("~/Content/img/app/apple-touch-icon.png")">
+    <meta name="apple-mobile-web-app-title" content="學區生活圈">
+    <title>@ViewBag.Title - 學區生活圈</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    @Styles.Render("~/Content/css")
+    @RenderSection("styles", required: false)
+</head>
+<body class="@(large ? "large-text" : "")">
+    <a class="skip-link" href="#main">跳到主要內容</a>
+    @Html.Partial("_Icons")
+
+    <header class="app-header">
+        <div class="container d-flex align-items-center gap-2 py-2">
+            <a class="brand me-2 d-flex align-items-center" href="@Url.Action("Index", "Home")"><img class="me-1" src="@Url.Content("~/Content/img/mascot-wave.svg")" alt="" width="34" height="36" />學區<span>生活圈</span></a>
+            <nav class="d-none d-lg-flex flex-grow-1 gap-1" aria-label="主選單">
+                <a class="nav-link @navCls("Home", "Index")" href="@Url.Action("Index", "Home")">首頁</a>
+                <a class="nav-link @navCls("Stores", null)" href="@Url.Action("Map", "Stores")" data-tour="nav-map">地圖找店</a>
+                <a class="nav-link @navCls("Coupons", null) @navCls("MyCoupons", null)" href="@Url.Action("Index", "Coupons")" data-tour="nav-coupons">優惠券</a>
+                <a class="nav-link @navCls("MemberCard", null) @navCls("Account", "Settings") @navCls("Favorites", null)" href="@Url.Action(Request.IsAuthenticated ? "Index" : "Login", Request.IsAuthenticated ? "MemberCard" : "Account")" data-tour="nav-me">我的</a>
+                @if (isMerchant)
+                {
+                    <a class="nav-link @navCls("Merchant", null)" href="@Url.Action("Index", "Merchant")">店家後台</a>
+                }
+                @if (isAdmin)
+                {
+                    <a class="nav-link @navCls("Admin", null)" href="@Url.Action("Stores", "Admin")">平台管理</a>
+                }
+            </nav>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                @using (Html.BeginForm("ToggleTextSize", "Home", FormMethod.Post, new { @class = "m-0" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
+                    <button type="submit" class="btn btn-sm btn-soft" aria-pressed="@(large ? "true" : "false")">@(large ? "一般字" : "大字")</button>
+                }
+                @if (Request.IsAuthenticated)
+                {
+                    using (Html.BeginForm("Logout", "Account", FormMethod.Post, new { @class = "m-0 d-none d-lg-block" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">登出</button>
+                    }
+                }
+                else
+                {
+                    <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Login", "Account")">登入</a>
+                    <a class="btn btn-sm btn-brand" href="@Url.Action("Register", "Account")">註冊</a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <main id="main" class="container py-3 py-lg-4">
+        @if (TempData["FlashMessage"] != null)
+        {
+            <div class="alert alert-@(TempData["FlashType"] ?? "success") alert-dismissible fade show rounded-4" role="status">
+                @TempData["FlashMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="關閉"></button>
+            </div>
+        }
+        @if (ViewBag.NewBadges != null)
+        {
+            var fresh = (List<BadgeDef>)ViewBag.NewBadges;
+            <div class="badge-toast" role="status">
+                <img src="@Url.Content("~/Content/img/mascot-happy.svg")" alt="" width="52" height="55" />
+                <div class="flex-grow-1"><strong>解鎖徽章！</strong><br />@string.Join("、", fresh.Select(b => b.Name))</div>
+                <a class="btn btn-sm btn-light fw-bold" href="@Url.Action("Index", "MemberCard")">看徽章</a>
+            </div>
+        }
+        @RenderBody()
+    </main>
+    @if (TempData["Celebrate"] != null || ViewBag.NewBadges != null)
+    {
+        @* 領券成功的小慶祝（純裝飾，文字訊息在上方提示框） *@
+        <div class="celebrate" aria-hidden="true">
+            @for (int i = 0; i < 18; i++)
+            {
+                <i style="--x:@((i * 37) % 100)vw;--d:@(i % 6 * 0.08)s;--c:@(new[] { "#F97316", "#FBBF24", "#F43F5E", "#22C55E", "#3B82F6", "#A855F7" }[i % 6])"></i>
+            }
+            <img src="@Url.Content("~/Content/img/mascot-happy.svg")" alt="" />
+        </div>
+    }
+
+    <footer class="container pb-4">
+        <hr />
+        <p class="footer-links mb-2">
+            <a href="@Url.Action("Partner", "Home")">店家合作</a>
+            <a href="@Url.Action("Index", "Campaigns")">活動</a>
+            <a href="@Url.Action("Tutorial", "Home")">使用教學</a>
+            <a href="@Url.Action("About", "Home")">關於</a>
+        </p>
+        <p class="mb-1">&copy; @DateTime.Now.Year 學區生活圈｜國立臺中科技大學 動態網頁程式設計 期末專題</p>
+        <p class="mb-1">真實店家資料來自 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap 貢獻者</a>（ODbL），可能不完整或過時。標示「示範」的店家與優惠為虛構。</p>
+        <p class="mb-0">平台不經手金流，付款請在店內完成。</p>
+    </footer>
+
+    <nav class="bottom-nav" aria-label="快速選單">
+        <a class="@navCls("Home", "Index")" href="@Url.Action("Index", "Home")" @(ctrl == "Home" && act == "Index" ? "aria-current=page" : "")><span class="ico">@Ui.Ic("home")</span>首頁</a>
+        <a class="@navCls("Stores", null)" href="@Url.Action("Map", "Stores")" data-tour="nav-map"><span class="ico">@Ui.Ic("map")</span>地圖</a>
+        <a class="@navCls("Coupons", null) @navCls("MyCoupons", null)" href="@Url.Action("Index", "Coupons")" data-tour="nav-coupons"><span class="ico">@Ui.Ic("ticket")</span>優惠券</a>
+        <a class="@navCls("Account", null) @navCls("MemberCard", null) @navCls("Favorites", null) @navCls("Merchant", null) @navCls("Admin", null)" href="@Url.Action(Request.IsAuthenticated ? "Index" : "Login", Request.IsAuthenticated ? "MemberCard" : "Account")" data-tour="nav-me"><span class="ico">@Ui.Ic("user")</span>我的</a>
+    </nav>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    <script src="@Url.Content("~/Scripts/tour.js")"></script>
+    <script src="@Url.Content("~/Scripts/site.js")" data-root="@Url.Content("~/")"></script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>

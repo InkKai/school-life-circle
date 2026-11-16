@@ -1,0 +1,58 @@
+﻿@model Campaign
+@{
+    ViewBag.Title = Model.Id == 0 ? "新增活動" : "修改活動";
+}
+
+<h1 class="mb-3">平台管理</h1>
+@Html.Partial("_AdminNav")
+<h2 class="h4">@ViewBag.Title</h2>
+
+@using (Html.BeginForm("SaveCampaign", "Admin", FormMethod.Post, new { @class = "panel" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger", role = "alert" })
+    @Html.HiddenFor(m => m.Id)
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Title, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.Title, new { @class = "form-control", placeholder = "例如：考試週應援" })
+        @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger" })
+    </div>
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Tagline, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.Tagline, new { @class = "form-control", placeholder = "例如：熬夜讀書辛苦了，吃飽喝足再上場" })
+        @Html.ValidationMessageFor(m => m.Tagline, "", new { @class = "text-danger" })
+    </div>
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            @Html.LabelFor(m => m.StartDate, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.StartDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+            @Html.ValidationMessageFor(m => m.StartDate, "", new { @class = "text-danger" })
+        </div>
+        <div class="col-md-6">
+            @Html.LabelFor(m => m.EndDate, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.EndDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+            @Html.ValidationMessageFor(m => m.EndDate, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <fieldset class="mb-3">
+        <legend class="form-label fs-6">主題色</legend>
+        <div class="d-flex flex-wrap gap-2">
+            @foreach (var t in CampaignThemes.All)
+            {
+                <input type="radio" class="btn-check" name="Theme" id="th-@t[0]" value="@t[0]" @(Model.Theme == t[0] ? "checked" : "") />
+                <label class="btn btn-chip" for="th-@t[0]"><span class="theme-dot" style="background:@Ui.ThemeGradient(t[0])" aria-hidden="true"></span> @t[1]</label>
+            }
+        </div>
+        @Html.ValidationMessageFor(m => m.Theme, "", new { @class = "text-danger" })
+    </fieldset>
+    <div class="form-check mb-3">
+        @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input" })
+        @Html.LabelFor(m => m.IsActive, new { @class = "form-check-label" })
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-smile btn-lg">儲存</button>
+        @Html.ActionLink("取消", "Campaigns", null, new { @class = "btn btn-outline-secondary btn-lg" })
+    </div>
+}
+
+@section scripts { @Scripts.Render("~/bundles/jqueryval") }

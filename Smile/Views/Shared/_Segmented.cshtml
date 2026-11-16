@@ -1,0 +1,8 @@
+﻿@model string[][]
+@* 分段切換（例如 列表｜地圖）。每項：{ 文字, 網址, 是否目前頁("1") } *@
+<nav class="segmented mb-3" aria-label="@ViewData["label"]">
+    @foreach (var item in Model)
+    {
+        <a href="@item[1]" class="@(item[2] == "1" ? "on" : "")" @(item[2] == "1" ? "aria-current=page" : "")>@item[0]</a>
+    }
+</nav>

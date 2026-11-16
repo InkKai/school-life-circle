@@ -1,0 +1,94 @@
+﻿@model StoreIndexViewModel
+@{
+    ViewBag.Title = "附近店家";
+    var totalPages = (int)Math.Ceiling(Model.TotalCount / (double)Model.PageSize);
+    Func<int, string> pageUrl = p => Url.Action("Index", new { categoryId = Model.CategoryId, schoolId = Model.SchoolId, q = Model.Query, withCoupons = Model.OnlyWithCoupons ? (bool?)true : null, accessible = Model.OnlyAccessible ? (bool?)true : null, lat = Model.Lat, lng = Model.Lng, page = p });
+}
+
+<h1 class="visually-hidden">附近店家</h1>
+@Html.Partial("_Segmented", new[] { new[] { "列表", Url.Action("Index"), "1" }, new[] { "地圖", Url.Action("Map"), "0" } }, new ViewDataDictionary { { "label", "切換列表或地圖" } })
+
+<form method="get" action="@Url.Action("Index")" id="filterForm" role="search">
+    <div class="search-bar mb-2">
+        @Ui.Ic("search")
+        <label for="q" class="visually-hidden">搜尋店名或商品</label>
+        <input type="search" id="q" name="q" value="@Model.Query" placeholder="搜尋店名或商品" />
+        <button type="submit" class="btn btn-brand btn-sm">搜尋</button>
+    </div>
+    <div class="filter-row mb-3">
+        <label class="location-pill">
+            @Ui.Ic("pin")
+            <span class="visually-hidden">距離從哪裡算</span>
+            <select id="schoolId" name="schoolId" onchange="clearLoc();this.form.submit()">
+                @foreach (var s in Model.Schools)
+                {
+                    <option value="@s.Id" @(Model.SchoolId == s.Id && Model.Lat == null ? "selected" : "")>@s.ShortName</option>
+                }
+            </select>
+        </label>
+        <label class="location-pill">
+            <span class="visually-hidden">分類</span>
+            <select name="categoryId" onchange="this.form.submit()">
+                <option value="">全部分類</option>
+                @foreach (var c in Model.Categories)
+                {
+                    <option value="@c.Id" @(Model.CategoryId == c.Id ? "selected" : "")>@c.Name</option>
+                }
+            </select>
+        </label>
+        <input type="checkbox" class="btn-check" id="withCoupons" name="withCoupons" value="true" @(Model.OnlyWithCoupons ? "checked" : "") onchange="this.form.submit()" />
+        <label class="btn btn-sm btn-chip" for="withCoupons">有優惠</label>
+        <input type="checkbox" class="btn-check" id="accessible" name="accessible" value="true" @(Model.OnlyAccessible ? "checked" : "") onchange="this.form.submit()" />
+        <label class="btn btn-sm btn-chip" for="accessible">@Ui.Ic("wheel") 輪椅可進入</label>
+        <button type="button" class="btn btn-sm btn-chip" id="useLocation">@Ui.Ic("compass") 用我的位置</button>
+        <input type="hidden" name="lat" id="lat" value="@Model.Lat" />
+        <input type="hidden" name="lng" id="lng" value="@Model.Lng" />
+    </div>
+</form>
+
+<p class="text-ink-2 small mb-2" role="status">@Model.OriginName 附近 <strong>@Model.TotalCount</strong> 間@(totalPages > 1 ? "，第 " + Model.Page + "/" + totalPages + " 頁" : "")</p>
+
+@if (!Model.Items.Any())
+{
+    <div class="empty-state"><img class="mascot" src="@Url.Content("~/Content/img/mascot-sleep.svg")" alt="" /><p>找不到，換個條件試試</p></div>
+}
+<h2 class="visually-hidden">搜尋結果</h2>
+<div class="row g-2">
+    @foreach (var item in Model.Items)
+    {
+        <div class="col-12 col-md-6 col-xl-4">@Html.Partial("_StoreRow", item)</div>
+    }
+</div>
+
+@if (totalPages > 1)
+{
+    <nav aria-label="分頁" class="d-flex justify-content-center gap-2 mt-4">
+        @if (Model.Page > 1)
+        {
+            <a class="btn btn-outline-brand" href="@pageUrl(Model.Page - 1)">← 上一頁</a>
+        }
+        @if (Model.Page < totalPages)
+        {
+            <a class="btn btn-brand" href="@pageUrl(Model.Page + 1)">下一頁 →</a>
+        }
+    </nav>
+}
+
+@section scripts {
+    <script>
+        function clearLoc() { document.getElementById('lat').value = ''; document.getElementById('lng').value = ''; }
+        document.getElementById('useLocation').addEventListener('click', function () {
+            var btn = this;
+            if (!navigator.geolocation) { alert('這個瀏覽器不支援定位，請改選學校。'); return; }
+            btn.disabled = true; btn.textContent = '定位中…';
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                document.getElementById('lat').value = pos.coords.latitude.toFixed(6);
+                document.getElementById('lng').value = pos.coords.longitude.toFixed(6);
+                document.getElementById('filterForm').submit();
+            }, function () {
+                btn.disabled = false; btn.textContent = '用我的位置';
+                alert('無法取得位置，請改選學校。');
+            }, { timeout: 10000 });
+        });
+    </script>
+}

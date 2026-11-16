@@ -1,0 +1,13 @@
+﻿@model UserCoupon
+@{ ViewBag.Title = "家人分享的優惠券"; }
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <p class="fs-5">家人傳了一張優惠券給你，到店後把這個畫面拿給店員看就可以了。</p>
+        @Html.Partial("_QrPanel", Model)
+        <div class="card card-body mt-3">
+            <p class="mb-1"><strong>店家地址：</strong>@Model.Coupon.Store.Address</p>
+            <p class="mb-0">@Html.ActionLink("看店家詳情", "Details", "Stores", new { id = Model.Coupon.StoreId }, null)｜@Html.ActionLink("怎麼使用？", "Tutorial", "Home")</p>
+        </div>
+    </div>
+</div>

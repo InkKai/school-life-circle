@@ -1,0 +1,101 @@
+﻿@model PickViewModel
+@{
+    ViewBag.Title = "今天吃什麼";
+    var r = Model.Result;
+}
+
+<div class="pick-hero mb-3">
+    <img class="pick-mascot" src="@Url.Content(r != null ? "~/Content/img/mascot-happy.svg" : Model.Spun ? "~/Content/img/mascot-sleep.svg" : "~/Content/img/mascot-point.svg")" alt="" />
+    <div>
+        <h1 class="h3 fw-bold mb-1">今天吃什麼？</h1>
+        <p class="mb-0">選好條件，小圈幫你挑一間</p>
+    </div>
+</div>
+
+<form method="get" action="@Url.Action("Pick")" class="panel mb-3">
+    <input type="hidden" name="spin" value="true" />
+    <fieldset class="mb-3">
+        <legend class="pick-legend">想吃</legend>
+        <div class="d-flex gap-2 flex-wrap">
+            <input type="radio" class="btn-check" name="kind" id="kFood" value="food" @(Model.Kind == "food" ? "checked" : "") />
+            <label class="btn btn-chip" for="kFood">@Ui.ArtSvg("bento", "ic") 正餐</label>
+            <input type="radio" class="btn-check" name="kind" id="kDrink" value="drink" @(Model.Kind == "drink" ? "checked" : "") />
+            <label class="btn btn-chip" for="kDrink">@Ui.ArtSvg("drink", "ic") 飲料甜點</label>
+        </div>
+    </fieldset>
+    <fieldset class="mb-3">
+        <legend class="pick-legend">走路最多</legend>
+        <div class="d-flex gap-2 flex-wrap">
+            @foreach (var m in new[] { 5, 10, 15 })
+            {
+                <input type="radio" class="btn-check" name="minutes" id="m@(m)" value="@m" @(Model.Minutes == m ? "checked" : "") />
+                <label class="btn btn-chip" for="m@(m)">@m 分鐘</label>
+            }
+        </div>
+    </fieldset>
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <label class="location-pill">
+            @Ui.Ic("pin")
+            <span class="visually-hidden">從哪裡出發</span>
+            <select name="schoolId">
+                @foreach (var s in Model.Schools)
+                {
+                    <option value="@s.Id" @(Model.SchoolId == s.Id ? "selected" : "")>@s.ShortName 出發</option>
+                }
+            </select>
+        </label>
+        <input type="checkbox" class="btn-check" name="coupon" id="onlyCoupon" value="true" @(Model.OnlyCoupon ? "checked" : "") />
+        <label class="btn btn-sm btn-chip" for="onlyCoupon">只要有優惠的</label>
+    </div>
+    <button type="submit" class="btn btn-brand btn-lg w-100 pick-go">@(Model.Spun ? "再選一次！" : "幫我選！")</button>
+</form>
+
+@if (Model.Spun)
+{
+    <section class="pick-result" aria-labelledby="pickTitle">
+        <h2 id="pickTitle" class="visually-hidden">小圈的選擇</h2>
+        @if (r == null)
+        {
+            <div class="empty-state panel"><p class="mb-0">這個條件找不到店，走遠一點或取消「只要有優惠」試試</p></div>
+        }
+        else
+        {
+            <div class="slot panel" id="slot" data-names="@string.Join("|", Model.RollNames)">
+                <p class="slot-label">從 @Model.CandidateCount 間裡面，小圈選了…</p>
+                <p class="slot-name" id="slotName" aria-hidden="true">@r.Store.Name</p>
+                <div id="slotResult" role="status">
+                    @Html.Partial("_StoreRow", r)
+                </div>
+            </div>
+        }
+    </section>
+}
+
+@section scripts {
+    <script>
+        (function () {
+            var slot = document.getElementById('slot');
+            if (!slot) return;
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var names = (slot.getAttribute('data-names') || '').split('|').filter(Boolean);
+            var nameEl = document.getElementById('slotName'), result = document.getElementById('slotResult');
+            var finalName = nameEl.textContent;
+            if (reduce || names.length < 2) return;
+            // 像拉霸一樣快速跑店名，越跑越慢，最後停在結果
+            result.style.visibility = 'hidden';
+            nameEl.classList.add('rolling');
+            var i = 0, delay = 60;
+            (function tick() {
+                nameEl.textContent = names[i++ % names.length];
+                delay *= 1.12;
+                if (delay < 380) setTimeout(tick, delay);
+                else {
+                    nameEl.textContent = finalName;
+                    nameEl.classList.remove('rolling');
+                    nameEl.classList.add('landed');
+                    result.style.visibility = 'visible';
+                }
+            })();
+        })();
+    </script>
+}

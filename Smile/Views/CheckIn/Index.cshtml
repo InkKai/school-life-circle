@@ -1,0 +1,154 @@
+﻿@model CheckInViewModel
+@{
+    ViewBag.Title = "簽到抽抽樂";
+    var t = Model.Today;
+    var daysInMonth = DateTime.DaysInMonth(t.Year, t.Month);
+    var lead = (int)Model.MonthStart.DayOfWeek;   // 週日開頭
+    var p = Model.JustDrew;
+    var nextBonus = 7 - (Model.Streak % 7);
+}
+
+<div class="ci-head mb-3">
+    <img src="@Url.Content(Model.CheckedToday ? "~/Content/img/mascot-happy.svg" : "~/Content/img/mascot-point.svg")" alt="" width="84" height="88" />
+    <div>
+        <h1 class="h3 fw-bold mb-1">簽到抽抽樂</h1>
+        <p class="mb-0 text-ink-2">每天簽到一次，小圈的扭蛋機送你經驗值</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <section class="gacha panel" aria-labelledby="gachaTitle">
+            <h2 id="gachaTitle" class="visually-hidden">扭蛋機</h2>
+            <div class="gacha-machine @(p != null ? "opened" : "")" aria-hidden="true">
+                <div class="gm-dome">
+                    @foreach (var c in new[] { "#F97316", "#3B82F6", "#22C55E", "#A855F7", "#F43F5E", "#FBBF24", "#14B8A6" })
+                    {
+                        <span class="gm-ball" style="--c:@c"></span>
+                    }
+                </div>
+                <div class="gm-body">
+                    <span class="gm-knob"></span>
+                    <span class="gm-slot"></span>
+                </div>
+                @if (p != null)
+                {
+                    <span class="gm-capsule" style="--c:@p.Color"></span>
+                }
+            </div>
+
+            @if (p != null)
+            {
+                <div class="prize-reveal @(p.Rare ? "rare" : "")" role="status">
+                    <p class="prize-label">今天開出</p>
+                    <p class="prize-name" style="color:@(p.Rare ? "#B45309" : "inherit")">@p.Name</p>
+                    @if (Model.JustBonus)
+                    {
+                        <p class="prize-bonus">連續 @Model.Streak 天加碼 +@Gacha.StreakBonus！</p>
+                    }
+                    <p class="small text-ink-2 mb-0">共獲得 @Model.JustXp 點經驗值，明天再來！</p>
+                </div>
+            }
+            else if (Model.CheckedToday)
+            {
+                <p class="text-center fw-bold mt-3 mb-0" role="status">今天已經簽到了，明天再來抽！</p>
+            }
+            else
+            {
+                using (Html.BeginForm("Draw", "CheckIn", FormMethod.Post, new { id = "drawForm", @class = "mt-3" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-brand btn-lg w-100 gacha-go" id="drawBtn">@Ui.Ic("gift") 簽到並轉一次</button>
+                }
+            }
+
+            <details class="odds mt-3">
+                <summary>機率說明</summary>
+                <ul class="mb-1">
+                    @foreach (var pr in Gacha.Prizes)
+                    {
+                        <li><span class="odds-dot" style="background:@pr.Color" aria-hidden="true"></span>@pr.Name：@pr.Weight%</li>
+                    }
+                </ul>
+                <p class="small text-ink-2 mb-0">每天免費一次，連續第 7、14、21… 天再加 @Gacha.StreakBonus 點。經驗值只用來升級和拿徽章，不能換錢或折抵消費。</p>
+            </details>
+        </section>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="ci-stats mb-3">
+            <div><strong>@Model.Streak</strong><span>連續天數</span></div>
+            <div><strong>@Model.TotalDays</strong><span>累計簽到</span></div>
+            <div><strong>@Model.TotalXp</strong><span>扭蛋經驗值</span></div>
+        </div>
+        @if (Model.Streak > 0)
+        {
+            <p class="streak-note">@Ui.Ic("fire", "ic text-danger") @(nextBonus == 7 && Model.CheckedToday ? "今天拿到連續加碼了！" : "再簽 " + nextBonus + " 天，就有連續加碼 +" + Gacha.StreakBonus)</p>
+        }
+
+        <section class="panel" aria-labelledby="calTitle">
+            <h2 id="calTitle" class="h6 fw-bold">@t.Year 年 @t.Month 月</h2>
+            <table class="ci-cal">
+                <caption class="visually-hidden">本月簽到紀錄，打勾的是已簽到的日子</caption>
+                <thead>
+                    <tr>@foreach (var w in new[] { "日", "一", "二", "三", "四", "五", "六" }) {<th scope="col">@w</th>}</tr>
+                </thead>
+                <tbody>
+                    @for (int row = 0; row < (lead + daysInMonth + 6) / 7; row++)
+                    {
+                        <tr>
+                            @for (int col = 0; col < 7; col++)
+                            {
+                                var n = row * 7 + col - lead + 1;
+                                if (n < 1 || n > daysInMonth)
+                                {
+                                    <td></td>
+                                }
+                                else
+                                {
+                                    var day = new DateTime(t.Year, t.Month, n);
+                                    string prize;
+                                    var done = Model.Days.TryGetValue(day, out prize);
+                                    var cls = (done ? "done " : "") + (day == t ? "today " : "") + (day > t ? "future" : "");
+                                    <td class="@cls">
+                                        <span class="d-num">@n</span>
+                                        @if (done)
+                                        {
+                                            <span class="d-mark" style="background:@Gacha.Find(prize).Color">@Ui.Ic(prize == "star" ? "star" : "check")</span>
+                                            <span class="visually-hidden">已簽到，@Gacha.Find(prize).Name</span>
+                                        }
+                                        else if (day == t)
+                                        {
+                                            <span class="visually-hidden">今天，還沒簽到</span>
+                                        }
+                                    </td>
+                                }
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // 按下去先讓扭蛋機轉一下再送出（純裝飾；減少動態效果時直接送出）
+        (function () {
+            var f = document.getElementById('drawForm');
+            if (!f) return;
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            f.addEventListener('submit', function (e) {
+                if (reduce || f.dataset.go) return;
+                e.preventDefault();
+                f.dataset.go = '1';
+                var btn = document.getElementById('drawBtn');
+                btn.disabled = true;
+                btn.textContent = '轉轉轉…';
+                document.querySelector('.gacha-machine').classList.add('spinning');
+                setTimeout(function () { f.submit(); }, 1100);
+            });
+        })();
+    </script>
+}

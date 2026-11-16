@@ -1,0 +1,41 @@
+﻿@model List<Favorite>
+@{ ViewBag.Title = "我的收藏"; }
+
+<h1 class="h4 fw-bold mb-3">我的收藏</h1>
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <img class="mascot" src="@Url.Content("~/Content/img/mascot-sleep.svg")" alt="" />
+        <p>還沒有收藏，看到喜歡的店就按「收藏」</p>
+        <a class="btn btn-brand" href="@Url.Action("Index", "Stores")">去逛逛</a>
+    </div>
+}
+<div class="row g-2">
+    @foreach (var f in Model)
+    {
+        var s = f.Store;
+        <div class="col-12 col-md-6 col-xl-4">
+            <article class="store-row">
+                <div class="thumb" style="background:@Ui.Tint(s.Category)">
+                    @if (!string.IsNullOrEmpty(s.PhotoUrl))
+                    {
+                        <img src="@Url.Content(s.PhotoUrl)" alt="" loading="lazy" />
+                    }
+                    else
+                    {
+                        @Ui.Art(s)
+                    }
+                </div>
+                <div class="body">
+                    <h2 class="h3-like"><a class="stretched-link" href="@Url.Action("Details", "Stores", new { id = s.Id })">@s.Name</a></h2>
+                    <p class="meta"><span>@s.Category.Name</span></p>
+                </div>
+                @using (Html.BeginForm("Remove", "Favorites", new { id = f.Id }, FormMethod.Post, new { @class = "m-0 above-link" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">移除<span class="visually-hidden">收藏：@s.Name</span></button>
+                }
+            </article>
+        </div>
+    }
+</div>

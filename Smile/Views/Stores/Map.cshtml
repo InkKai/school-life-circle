@@ -1,0 +1,73 @@
+﻿@{ ViewBag.Title = "地圖模式"; }
+@section styles {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+}
+
+<h1 class="visually-hidden">地圖找店</h1>
+@Html.Partial("_Segmented", new[] { new[] { "列表", Url.Action("Index"), "0" }, new[] { "地圖", Url.Action("Map"), "1" } }, new ViewDataDictionary { { "label", "切換列表或地圖" } })
+<div class="h-scroll filter-scroll mb-2" role="group" aria-label="地圖篩選">
+    <button type="button" class="btn btn-sm btn-brand" data-filter="all" aria-pressed="true">全部</button>
+    <button type="button" class="btn btn-sm btn-soft" data-filter="coupon" aria-pressed="false">有優惠</button>
+    @foreach (var c in (List<StoreCategory>)ViewBag.Categories)
+    {
+        <button type="button" class="btn btn-sm btn-soft" data-filter="@c.Name" aria-pressed="false">@c.Name</button>
+    }
+</div>
+<div class="map-wrap">
+    <div id="map" role="region" aria-label="店家地圖；不方便操作時可切換到列表"></div>
+    <div class="map-card" id="mapCard" aria-live="polite">
+        <img class="mc-mascot" src="@Url.Content("~/Content/img/mascot-point.svg")" alt="" width="48" height="50" />
+        <div class="flex-grow-1"><strong>點地圖上的店家</strong><br /><small class="text-ink-2">這裡會顯示店家摘要</small></div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script>
+        var map = L.map('map').setView([24.1495, 120.6865], 16);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> 貢獻者'
+        }).addTo(map);
+        function art(name) { return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-hidden="true" focusable="false"><use href="#a-' + name + '"></use></svg>'; }
+        function pin(name, color) {
+            return L.divIcon({ className: '', iconSize: [36, 36], iconAnchor: [18, 18],
+                html: '<div style="background:' + color + ';border-radius:50%;width:36px;height:36px;padding:4px;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.4)">' + art(name) + '</div>' });
+        }
+        function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+        var cluster = L.markerClusterGroup({ maxClusterRadius: 45 }); map.addLayer(cluster);
+        var all = [];
+        fetch('@Url.Action("MapData")').then(function (r) { return r.json(); }).then(function (data) {
+            data.schools.forEach(function (s) {
+                L.marker([s.lat, s.lng], { icon: pin('school', '#1F2937'), title: s.ShortName, zIndexOffset: 1000 }).addTo(map).bindPopup('<strong>' + esc(s.ShortName) + '</strong>');
+                L.circle([s.lat, s.lng], { radius: 2000, color: '#1F2937', weight: 1, fillOpacity: 0.02, interactive: false }).addTo(map);
+            });
+            data.stores.forEach(function (s) {
+                var m = L.marker([s.lat, s.lng], { icon: pin(s.Icon, s.Coupons > 0 ? '#C2410C' : '#FFFFFF'), title: s.Name })
+                    .on('click', function () { showCard(s); });
+                m.meta = s; all.push(m);
+            });
+            apply('all');
+        });
+        function showCard(s) {
+            document.getElementById('mapCard').innerHTML =
+                '<span class="mc-ico">' + art(s.Icon) + '</span>' +
+                '<div class="flex-grow-1 min-w-0"><strong class="d-block text-truncate">' + esc(s.Name) + '</strong>' +
+                '<small class="text-ink-2">' + esc(s.Category) + (s.Coupons > 0 ? '・' + s.Coupons + ' 張優惠' : '') + '</small></div>' +
+                '<a class="btn btn-brand btn-sm" href="' + s.url + '">看店家<span class="visually-hidden">：' + esc(s.Name) + '</span></a>';
+        }
+        function apply(f) {
+            cluster.clearLayers();
+            cluster.addLayers(all.filter(function (m) { return f === 'all' || (f === 'coupon' ? m.meta.Coupons > 0 : m.meta.Category === f); }));
+        }
+        document.querySelectorAll('[data-filter]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                document.querySelectorAll('[data-filter]').forEach(function (x) { x.className = 'btn btn-sm btn-soft'; x.setAttribute('aria-pressed', 'false'); });
+                b.className = 'btn btn-sm btn-brand'; b.setAttribute('aria-pressed', 'true');
+                apply(b.getAttribute('data-filter'));
+            });
+        });
+    </script>
+}

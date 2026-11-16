@@ -1,0 +1,20 @@
+﻿@model List<Campaign>
+@{
+    ViewBag.Title = "活動";
+    ViewBag.Description = "配合學校行事曆的主題優惠：考試週、社團成果展、校慶。";
+    var counts = (Dictionary<int, int>)ViewBag.Counts;
+}
+
+<h1 class="h4 fw-bold mb-1">活動</h1>
+<p class="text-ink-2">跟著學校的行事曆走，每一檔都有主題優惠。</p>
+
+@if (!Model.Any())
+{
+    <div class="empty-state"><img class="mascot" src="@Url.Content("~/Content/img/mascot-sleep.svg")" alt="" /><p>目前沒有活動，過幾天再來看看</p></div>
+}
+<div class="d-grid gap-3">
+    @foreach (var c in Model)
+    {
+        @Html.Partial("_CampaignBanner", c, new ViewDataDictionary { { "count", counts.ContainsKey(c.Id) ? counts[c.Id] : 0 } })
+    }
+</div>

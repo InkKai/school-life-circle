@@ -1,0 +1,35 @@
+﻿@model UserCoupon
+@{
+    ViewBag.Title = "送券給好友";
+    var friends = (List<User>)ViewBag.Friends;
+}
+
+<h1 class="h4 fw-bold mb-3">送券給好友</h1>
+<div class="row g-3">
+    <div class="col-md-5">@Html.Partial("_CouponCard", Model.Coupon, new ViewDataDictionary { { "claimed", true } })</div>
+    <div class="col-md-7">
+        @if (!friends.Any())
+        {
+            <div class="empty-state"><img class="mascot" src="@Url.Content("~/Content/img/mascot-sleep.svg")" alt="" /><p>還沒有好友</p><a class="btn btn-brand" href="@Url.Action("Index")">去加好友</a></div>
+        }
+        else
+        {
+            using (Html.BeginForm("Gift", "Friends", new { id = Model.Id }, FormMethod.Post, new { @class = "panel" }))
+            {
+                @Html.AntiForgeryToken()
+                <fieldset>
+                    <legend class="h6 fw-bold">要送給誰？</legend>
+                    @foreach (var f in friends)
+                    {
+                        <div class="form-check py-1">
+                            <input class="form-check-input" type="radio" name="friendId" id="f@(f.Id)" value="@f.Id" required />
+                            <label class="form-check-label" for="f@(f.Id)">@f.DisplayName</label>
+                        </div>
+                    }
+                </fieldset>
+                <p class="small text-ink-2 mt-2">送出後這張券就會到對方的「我的優惠券」，你這邊就沒有了。</p>
+                <button type="submit" class="btn btn-brand w-100">@Ui.Ic("gift") 送出</button>
+            }
+        }
+    </div>
+</div>

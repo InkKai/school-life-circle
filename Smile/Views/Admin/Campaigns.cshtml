@@ -1,0 +1,40 @@
+﻿@model List<Campaign>
+@{
+    ViewBag.Title = "活動管理";
+    var counts = (Dictionary<int, int>)ViewBag.Counts;
+    var today = DateTime.Today;
+}
+
+<h1 class="mb-3">平台管理</h1>
+@Html.Partial("_AdminNav")
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <p class="mb-0 text-ink-2">配合學校行事曆開檔期（考試週、社團成果展、校慶），店家發券時可以選擇參加。</p>
+    <a class="btn btn-brand" href="@Url.Action("CampaignForm")">@Ui.Ic("plus") 新增活動</a>
+</div>
+
+@if (!Model.Any())
+{
+    <p>還沒有活動。</p>
+}
+<div class="table-responsive">
+    <table class="table bg-white align-middle">
+        <thead><tr><th scope="col">活動</th><th scope="col">期間</th><th scope="col">狀態</th><th scope="col" class="text-end">參加優惠</th><th scope="col"><span class="visually-hidden">操作</span></th></tr></thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                var st = !c.IsActive ? "已下架" : c.IsRunning(today) ? "進行中" : c.IsUpcoming(today) ? "即將開始" : "已結束";
+                <tr>
+                    <th scope="row"><span class="theme-dot" style="background:@Ui.ThemeGradient(c.Theme)" aria-hidden="true"></span> @c.Title<br /><small class="text-ink-2 fw-normal">@c.Tagline</small></th>
+                    <td class="text-nowrap">@c.StartDate.ToString("MM/dd") – @c.EndDate.ToString("MM/dd")</td>
+                    <td>@st</td>
+                    <td class="text-end">@(counts.ContainsKey(c.Id) ? counts[c.Id] : 0)</td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("CampaignForm", new { id = c.Id })">修改<span class="visually-hidden">：@c.Title</span></a>
+                        <a class="btn btn-sm btn-soft" href="@Url.Action("Details", "Campaigns", new { id = c.Id })">預覽<span class="visually-hidden">：@c.Title</span></a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

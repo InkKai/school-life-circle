@@ -1,0 +1,71 @@
+﻿@model Store
+@Html.AntiForgeryToken()
+@Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+@Html.HiddenFor(m => m.Id)
+<div class="row g-3">
+    <div class="col-md-6">
+        @Html.LabelFor(m => m.Name, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+    </div>
+    <div class="col-md-6">
+        @Html.LabelFor(m => m.CategoryId, new { @class = "form-label" })
+        @Html.DropDownList("CategoryId", null, new { @class = "form-select" })
+    </div>
+    <div class="col-12">
+        @Html.LabelFor(m => m.Description, new { @class = "form-label" })
+        @Html.TextAreaFor(m => m.Description, 3, 40, new { @class = "form-control" })
+    </div>
+    <div class="col-12">
+        @Html.LabelFor(m => m.OwnerMessage, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.OwnerMessage, new { @class = "form-control", maxlength = "120", placeholder = "例如：便當每天現做，吃不飽再來加飯！", aria_describedby = "ownerHelp" })
+        <div id="ownerHelp" class="form-text">一句話就好，會顯示在店家頁最上面，讓客人認識你。</div>
+    </div>
+    <div class="col-md-8">
+        @Html.LabelFor(m => m.Address, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.Address, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.Address, "", new { @class = "text-danger" })
+    </div>
+    <div class="col-md-4">
+        @Html.LabelFor(m => m.Phone, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.Phone, new { @class = "form-control", type = "tel" })
+    </div>
+    <div class="col-md-6">
+        @Html.LabelFor(m => m.OpenHours, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.OpenHours, new { @class = "form-control", placeholder = "例如：11:00–21:00，週一公休" })
+    </div>
+    <div class="col-md-6">
+        @Html.LabelFor(m => m.PaymentMethods, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.PaymentMethods, new { @class = "form-control", placeholder = "例如：現金、LINE Pay、台灣Pay" })
+    </div>
+    <div class="col-6 col-md-3">
+        @Html.LabelFor(m => m.Latitude, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.Latitude, new { @class = "form-control", inputmode = "decimal" })
+        @Html.ValidationMessageFor(m => m.Latitude, "", new { @class = "text-danger" })
+    </div>
+    <div class="col-6 col-md-3">
+        @Html.LabelFor(m => m.Longitude, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.Longitude, new { @class = "form-control", inputmode = "decimal" })
+        @Html.ValidationMessageFor(m => m.Longitude, "", new { @class = "text-danger" })
+    </div>
+    <div class="col-md-6 d-flex align-items-end">
+        <button type="button" class="btn btn-outline-secondary" id="locateBtn">用我現在的位置填入座標</button>
+    </div>
+    <div class="col-12">
+        <fieldset class="card card-body">
+            <legend class="h6">無障礙資訊（送出後由平台實地查證）</legend>
+            <div class="form-check">@Html.CheckBoxFor(m => m.StepFreeEntrance, new { @class = "form-check-input" }) @Html.LabelFor(m => m.StepFreeEntrance, new { @class = "form-check-label" })</div>
+            <div class="form-check">@Html.CheckBoxFor(m => m.HasRamp, new { @class = "form-check-input" }) @Html.LabelFor(m => m.HasRamp, new { @class = "form-check-label" })</div>
+            <div class="form-check">@Html.CheckBoxFor(m => m.AccessibleToilet, new { @class = "form-check-input" }) @Html.LabelFor(m => m.AccessibleToilet, new { @class = "form-check-label" })</div>
+        </fieldset>
+    </div>
+</div>
+<script>
+    document.getElementById('locateBtn').addEventListener('click', function () {
+        if (!navigator.geolocation) { alert('這個瀏覽器不支援定位'); return; }
+        navigator.geolocation.getCurrentPosition(function (p) {
+            document.getElementById('Latitude').value = p.coords.latitude.toFixed(6);
+            document.getElementById('Longitude').value = p.coords.longitude.toFixed(6);
+        }, function () { alert('無法取得位置，請手動輸入'); });
+    });
+</script>

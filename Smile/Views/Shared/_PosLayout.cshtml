@@ -1,0 +1,23 @@
+﻿@{
+    var large = Request.Cookies["textsize"] != null && Request.Cookies["textsize"].Value == "large";
+}
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#111827">
+    <title>@ViewBag.Title - 學區生活圈 POS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    @Styles.Render("~/Content/css")
+</head>
+<body class="pos-body @(large ? "large-text" : "")">
+    <a class="skip-link" href="#main">跳到主要內容</a>
+    @RenderBody()
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>

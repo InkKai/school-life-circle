@@ -1,0 +1,12 @@
+﻿@model Store
+@{ ViewBag.Title = "申請新店家"; }
+
+<h1 class="mb-2">申請新店家</h1>
+<p>填好資料送出後，平台審核通過就會上架。平台零抽成，也不經手你的營業收入。</p>
+@using (Html.BeginForm("CreateStore", "Merchant", FormMethod.Post))
+{
+    @Html.Partial("_StoreForm", Model)
+    <button type="submit" class="btn btn-smile btn-lg mt-3">送出申請</button>
+}
+
+@section scripts { @Scripts.Render("~/bundles/jqueryval") }

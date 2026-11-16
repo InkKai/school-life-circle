@@ -1,0 +1,33 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.rsuser
+
+# 編譯產物
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.pdb
+
+# NuGet 套件（用 packages.config 還原，Visual Studio 開啟時會自動下載）
+packages/
+
+# 發佈設定與輸出（可能含 Azure 帳號資訊）
+*.pubxml
+*.pubxml.user
+*.PublishSettings
+PublishProfiles/
+
+# 本機資料庫
+*.mdf
+*.ldf
+
+# 店家上傳的照片（使用者資料，不放進版本控制）
+Smile/Uploads/
+
+# 系統檔
+Thumbs.db
+Desktop.ini
+.DS_Store

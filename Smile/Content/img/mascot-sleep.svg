@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 210" class="sleep">
+<style>
+.all{animation:bob 2.6s ease-in-out infinite;transform-box:view-box;transform-origin:100px 190px}
+.eyes{animation:blink 4.2s infinite;transform-box:view-box;transform-origin:100px 106px}
+.wave{animation:wave .9s ease-in-out infinite alternate;transform-box:view-box;transform-origin:158px 104px}
+.point{animation:poke 1.4s ease-in-out infinite;transform-box:view-box}
+.shadow{animation:shadow 2.6s ease-in-out infinite;transform-box:view-box;transform-origin:100px 200px}
+.happy .all{animation:jump 1s cubic-bezier(.3,1.6,.5,1) infinite}
+.happy .shadow{animation:shadowj 1s cubic-bezier(.3,1.6,.5,1) infinite}
+.spark{animation:twinkle 1.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.spark2{animation-delay:.6s}
+.sleep .all{animation:breathe 3.6s ease-in-out infinite}
+.z{animation:zfloat 3s ease-in-out infinite;opacity:0}
+.z2{animation-delay:1.5s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes shadow{0%,100%{transform:scaleX(1);opacity:.12}50%{transform:scaleX(.85);opacity:.08}}
+@keyframes blink{0%,90%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}
+@keyframes wave{from{transform:rotate(-12deg)}to{transform:rotate(14deg)}}
+@keyframes poke{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+@keyframes jump{0%,100%{transform:translateY(0) scale(1,1)}15%{transform:translateY(0) scale(1.06,.94)}45%{transform:translateY(-22px) scale(.97,1.03)}75%{transform:translateY(0) scale(1.04,.96)}}
+@keyframes shadowj{0%,100%,15%,75%{transform:scaleX(1);opacity:.12}45%{transform:scaleX(.7);opacity:.06}}
+@keyframes twinkle{0%,100%{transform:scale(.6) rotate(0);opacity:.4}50%{transform:scale(1.15) rotate(20deg);opacity:1}}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.03,.97)}}
+@keyframes zfloat{0%{transform:translate(0,8px);opacity:0}30%{opacity:1}100%{transform:translate(10px,-18px);opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}.z{opacity:1}}
+</style>
+<defs><radialGradient id="g" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#FDBA74"/><stop offset="1" stop-color="#EA580C"/></radialGradient></defs>
+<ellipse class="shadow" cx="100" cy="200" rx="58" ry="7" fill="#000" opacity=".12"/>
+<g class="all">
+<ellipse cx="76" cy="188" rx="17" ry="9" fill="#C2410C"/><ellipse cx="124" cy="188" rx="17" ry="9" fill="#C2410C"/>
+<path d="M100 14C85 14 77 26 77 37c0 15 23 33 23 33s23-18 23-33c0-11-8-23-23-23Z" fill="#C2410C"/><circle cx="100" cy="37" r="8.5" fill="#FFF7ED"/>
+<ellipse cx="36" cy="138" rx="12" ry="19" fill="#EA580C" transform="rotate(28 36 138)"/>
+<ellipse cx="164" cy="138" rx="12" ry="19" fill="#EA580C" transform="rotate(-28 164 138)"/>
+<circle cx="100" cy="117" r="70" fill="url(#g)"/>
+<ellipse cx="100" cy="142" rx="42" ry="32" fill="#FFF7ED" opacity=".92"/>
+<ellipse cx="60" cy="124" rx="11" ry="6.5" fill="#FB7185" opacity=".55"/><ellipse cx="140" cy="124" rx="11" ry="6.5" fill="#FB7185" opacity=".55"/>
+<path d="M70 106q8 6 16 0M114 106q8 6 16 0" stroke="#1F2937" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+<path d="M93 124q7 5 14 0" stroke="#1F2937" stroke-width="4" fill="none" stroke-linecap="round"/>
+</g>
+<text class="z" x="150" y="58" font-family="Arial" font-weight="900" font-size="26" fill="#94A3B8">z</text><text class="z z2" x="168" y="40" font-family="Arial" font-weight="900" font-size="18" fill="#94A3B8">z</text>
+</svg>

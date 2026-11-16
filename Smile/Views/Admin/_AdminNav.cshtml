@@ -1,0 +1,7 @@
+﻿@{ var action = ViewContext.RouteData.Values["action"].ToString(); }
+<nav aria-label="平台管理選單" class="d-flex flex-wrap gap-2 mb-4">
+    @Html.ActionLink("店家審核", "Stores", null, new { @class = "btn " + (action == "Stores" ? "btn-smile" : "btn-outline-smile") })
+    @Html.ActionLink("活動管理", "Campaigns", null, new { @class = "btn " + (action.StartsWith("Campaign") ? "btn-smile" : "btn-outline-smile") })
+    @Html.ActionLink("使用者管理", "Users", null, new { @class = "btn " + (action == "Users" ? "btn-smile" : "btn-outline-smile") })
+    @Html.ActionLink("營運報表", "Reports", null, new { @class = "btn " + (action == "Reports" ? "btn-smile" : "btn-outline-smile") })
+</nav>

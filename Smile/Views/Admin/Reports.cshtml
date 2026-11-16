@@ -1,0 +1,69 @@
+﻿@model ReportViewModel
+@{
+    ViewBag.Title = "營運報表";
+    var maxClaims = Math.Max(1, Model.ByCategory.Max(r => r.Claims));
+}
+
+<h1 class="mb-3">平台管理</h1>
+@Html.Partial("_AdminNav")
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-lg-2"><div class="card card-body text-center"><div class="stat">@Model.Users</div><div>使用者</div></div></div>
+    <div class="col-6 col-md-4 col-lg-2"><div class="card card-body text-center"><div class="stat">@Model.Merchants</div><div>店家帳號</div></div></div>
+    <div class="col-6 col-md-4 col-lg-2"><div class="card card-body text-center"><div class="stat">@Model.ApprovedStores</div><div>上架店家</div></div></div>
+    <div class="col-6 col-md-4 col-lg-2"><div class="card card-body text-center"><div class="stat">@Model.PendingStores</div><div>待審店家</div></div></div>
+    <div class="col-6 col-md-4 col-lg-2"><div class="card card-body text-center"><div class="stat">@Model.Claims</div><div>領券總數</div></div></div>
+    <div class="col-6 col-md-4 col-lg-2"><div class="card card-body text-center"><div class="stat">@Model.Redemptions</div><div>核銷總數</div></div></div>
+</div>
+
+@{
+    Func<int, int, int> pct = (a, b) => b == 0 ? 0 : a * 100 / b;
+    var funnel = new[] {
+        new { Label = "註冊會員", N = Model.Members, Note = "近 7 天新增 " + Model.NewMembers7d + " 位" },
+        new { Label = "領過券", N = Model.ClaimedMembers, Note = "啟用率 " + pct(Model.ClaimedMembers, Model.Members) + "%" },
+        new { Label = "到店用過券", N = Model.RedeemedMembers, Note = "領券後到店 " + pct(Model.RedeemedMembers, Model.ClaimedMembers) + "%" },
+        new { Label = "用過 2 次以上", N = Model.ReturnedMembers, Note = "回訪 " + pct(Model.ReturnedMembers, Model.RedeemedMembers) + "%" }
+    };
+}
+<h2 class="h4">成長漏斗</h2>
+<section class="panel mb-4" aria-label="成長漏斗">
+    <ol class="funnel">
+        @foreach (var f in funnel)
+        {
+            <li>
+                <span class="f-label">@f.Label</span>
+                <span class="f-bar-wrap"><span class="f-bar" style="width:@Math.Max(4, pct(f.N, Math.Max(1, Model.Members)))%"></span></span>
+                <strong class="f-n">@f.N</strong>
+                <span class="f-note">@f.Note</span>
+            </li>
+        }
+    </ol>
+    <div class="row g-2 text-center mt-2">
+        <div class="col-6 col-md-3"><div class="mini-stat"><strong>@Model.ReferredMembers</strong><span>位由好友邀請</span></div></div>
+        <div class="col-6 col-md-3"><div class="mini-stat"><strong>@Model.FriendPairs</strong><span>組好友</span></div></div>
+        <div class="col-6 col-md-3"><div class="mini-stat"><strong>@Model.StampsGiven</strong><span>點已蓋</span></div></div>
+        <div class="col-6 col-md-3"><div class="mini-stat"><strong>@Model.JoinedStores</strong><span>間加入平台（@Model.FeaturedStores 間精選）</span></div></div>
+    </div>
+    <p class="small text-ink-2 mt-2 mb-0">漏斗依 AARRR 模型：獲取（註冊）→ 啟用（領券）→ 留存（回訪）→ 推薦（邀請）。只統計人數，不看個人紀錄。</p>
+</section>
+
+<h2 class="h4">各類別使用情況</h2>
+<div class="table-responsive">
+    <table class="table bg-white align-middle">
+        <caption>只顯示彙總數字，不公開任何個人的消費紀錄。</caption>
+        <thead><tr><th scope="col">類別</th><th scope="col" class="text-end">店家</th><th scope="col" class="text-end">領券</th><th scope="col" class="text-end">核銷</th><th scope="col" style="width:35%">領券比例</th></tr></thead>
+        <tbody>
+            @foreach (var r in Model.ByCategory)
+            {
+                <tr>
+                    <th scope="row">@r.Category</th>
+                    <td class="text-end">@r.Stores</td>
+                    <td class="text-end">@r.Claims</td>
+                    <td class="text-end">@r.Redemptions</td>
+                    <td><div class="bar" style="width:@(r.Claims * 100 / maxClaims)%" aria-hidden="true"></div></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<p class="small text-muted-smile">比較各類別的領券與核銷數，可以看出哪類店家的優惠最受歡迎。</p>

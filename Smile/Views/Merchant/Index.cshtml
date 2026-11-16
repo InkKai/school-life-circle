@@ -1,0 +1,87 @@
+﻿@model MerchantDashboardViewModel
+@{
+    ViewBag.Title = "店家主控台";
+    var s = Model.CurrentStore;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="mb-0">@s.Name</h1>
+    <div class="d-flex gap-2 align-items-center">
+        @if (Model.Stores.Count > 1)
+        {
+            <form method="get" action="@Url.Action("Index")" class="d-flex gap-2">
+                <label for="storeId" class="visually-hidden">切換店家</label>
+                <select id="storeId" name="storeId" class="form-select" onchange="this.form.submit()">
+                    @foreach (var st in Model.Stores)
+                    {
+                        <option value="@st.Id" @(st.Id == s.Id ? "selected" : "")>@st.Name</option>
+                    }
+                </select>
+            </form>
+        }
+        @Html.ActionLink("＋ 申請新店家", "CreateStore", null, new { @class = "btn btn-outline-secondary text-nowrap" })
+    </div>
+</div>
+
+@if (s.Status != StoreStatus.Approved)
+{
+    <div class="alert alert-warning">店家狀態：<strong>@StoreStatus.Display(s.Status)</strong>。@(s.Status == StoreStatus.Pending ? "審核通過後，消費者才看得到你的店。" : "請修改店家資料後聯絡平台。")</div>
+}
+
+@Html.Partial("_MerchantNav", s)
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3"><div class="card card-body text-center"><div class="stat">@Model.TodayRedemptions</div><div>今日核銷</div></div></div>
+    <div class="col-6 col-md-3"><div class="card card-body text-center"><div class="stat">@Model.MonthClaims</div><div>本月領券</div></div></div>
+    <div class="col-6 col-md-3"><div class="card card-body text-center"><div class="stat">@Model.Favorites</div><div>人收藏</div></div></div>
+    <div class="col-6 col-md-3"><div class="card card-body text-center"><div class="stat">@Model.StampCards</div><div>位集點顧客</div></div></div>
+</div>
+
+@{
+    var weekMax = Math.Max(1, Model.Week.Max(d => Math.Max(d.Claims, d.Redemptions)));
+    var weekClaims = Model.Week.Sum(d => d.Claims);
+    var weekRedeems = Model.Week.Sum(d => d.Redemptions);
+}
+<section class="panel mb-3" aria-labelledby="weekTitle">
+    <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2">
+        <h2 id="weekTitle" class="h6 fw-bold mb-0">@Ui.Ic("chart") 近 7 天</h2>
+        <p class="small text-ink-2 mb-0">領券 @weekClaims・到店使用 @weekRedeems@(weekClaims > 0 ? "・使用率 " + (weekRedeems * 100 / weekClaims) + "%" : "")</p>
+    </div>
+    <div class="week-chart" role="img" aria-label="近 7 天領券 @weekClaims 張、到店使用 @weekRedeems 張">
+        @foreach (var d in Model.Week)
+        {
+            <div class="wc-day">
+                <div class="wc-bars">
+                    <span class="wc-bar claim" style="height:@(d.Claims * 100 / weekMax)%"></span>
+                    <span class="wc-bar redeem" style="height:@(d.Redemptions * 100 / weekMax)%"></span>
+                </div>
+                <span class="wc-label">@d.Date.ToString("M/d")</span>
+            </div>
+        }
+    </div>
+    <p class="wc-legend small mb-0"><span class="dot claim"></span>領券　<span class="dot redeem"></span>到店使用</p>
+</section>
+
+<div class="row g-2 mb-4">
+    <div class="col-md-6"><a class="btn btn-smile btn-lg w-100" href="@Url.Action("Pos", new { storeId = s.Id })">@Ui.Ic("receipt") 開啟 POS 收銀</a></div>
+    <div class="col-md-6"><a class="btn btn-outline-smile btn-lg w-100" href="@Url.Action("Poster", new { storeId = s.Id })">@Ui.Ic("print") 印店頭立牌</a></div>
+</div>
+
+<h2 class="h4">最近核銷</h2>
+@if (!Model.RecentRedemptions.Any())
+{
+    <p>還沒有核銷紀錄。</p>
+}
+else
+{
+    <table class="table bg-white">
+        <thead><tr><th scope="col">時間</th><th scope="col">優惠</th><th scope="col">核銷碼</th></tr></thead>
+        <tbody>
+            @foreach (var r in Model.RecentRedemptions)
+            {
+                <tr><td>@r.RedeemedAt.ToString("MM-dd HH:mm")</td><td>@r.UserCoupon.Coupon.Title</td><td>@r.UserCoupon.Code</td></tr>
+            }
+        </tbody>
+    </table>
+}
+<p class="small text-muted-smile">本平台不取代 POS，結帳與發票請照店內現有方式處理。</p>

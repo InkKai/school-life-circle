@@ -1,0 +1,13 @@
+﻿@model Store
+@{ ViewBag.Title = "店家資料"; }
+
+<h1 class="mb-3">@Model.Name</h1>
+@Html.Partial("_MerchantNav", Model)
+@using (Html.BeginForm("EditStore", "Merchant", new { id = Model.Id }, FormMethod.Post))
+{
+    @Html.Partial("_StoreForm", Model)
+    <p class="small mt-3">修改無障礙資訊後，需要平台重新查證。</p>
+    <button type="submit" class="btn btn-smile btn-lg">儲存</button>
+}
+
+@section scripts { @Scripts.Render("~/bundles/jqueryval") }

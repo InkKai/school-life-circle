@@ -1,0 +1,26 @@
+﻿@model ForYouViewModel
+@if (Model.Page == 1)
+{
+    <div class="section-head">
+        <h2 id="forYouTitle">@Model.Headline</h2>
+    </div>
+}
+<div class="row g-2 fy-page" data-page="@Model.Page" data-more="@(Model.HasMore ? "1" : "0")">
+    @foreach (var fy in Model.Items)
+    {
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="fy-wrap">
+                @Html.Partial("_StoreRow", fy.Item)
+                <span class="fy-reason">@Ui.Ic("star") @fy.Reason</span>
+            </div>
+        </div>
+    }
+</div>
+@if (!Model.HasMore)
+{
+    <div class="fy-end">
+        <img src="@Url.Content("~/Content/img/mascot-sleep.svg")" alt="" width="72" height="76" />
+        <p class="mb-2">今天就推薦到這裡，小圈要休息了</p>
+        <a class="btn btn-soft btn-sm" href="@Url.Action("Index", "Stores")">自己逛逛所有店家</a>
+    </div>
+}

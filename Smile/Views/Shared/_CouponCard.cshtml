@@ -1,0 +1,52 @@
+﻿@model Coupon
+@{
+    var claimed = ViewData["claimed"] as bool? ?? false;
+    var wide = ViewData["wide"] as bool? ?? false;
+    var daysLeft = (Model.EndDate.Date - DateTime.Today).Days;
+    var cat = Model.Store != null ? Model.Store.Category : null;
+    var camp = Model.Campaign != null && Model.Campaign.IsRunning(DateTime.Today) ? Model.Campaign : null;
+}
+<article class="coupon @(wide ? "coupon-wide" : "")">
+    <div class="stub">
+        <span class="big" aria-hidden="true">@Ui.CouponHeadline(Model.Title)</span>
+        <small>@(daysLeft <= 3 ? "快到期" : "優惠券")</small>
+    </div>
+    <div class="info">
+        @if (camp != null)
+        {
+            <p class="mb-1"><span class="chip chip-camp">@camp.Title</span></p>
+        }
+        <p class="small mb-1 text-ink-2 text-truncate">@(Model.Store != null ? Model.Store.Name : "")</p>
+        <h3><a href="@Url.Action("Details", "Coupons", new { id = Model.Id })">@Model.Title</a></h3>
+        <p class="small mb-2 text-ink-2">
+            到 @Model.EndDate.ToString("MM/dd")
+            @if (daysLeft <= 3)
+            {
+                <strong class="text-danger">（剩 @(daysLeft < 0 ? 0 : daysLeft) 天）</strong>
+            }
+            ・剩 @Model.Remaining 張
+            @if (Model.IssuedCount >= 3)
+            {
+                <text>・@Model.IssuedCount 人已領</text>
+            }
+        </p>
+        <div class="mt-auto">
+            @if (claimed)
+            {
+                <a class="btn btn-sm btn-soft w-100" href="@Url.Action("Index", "MyCoupons")">已領取，去看看</a>
+            }
+            else if (Model.Remaining <= 0)
+            {
+                <button class="btn btn-sm btn-secondary w-100" disabled>已領完</button>
+            }
+            else
+            {
+                using (Html.BeginForm("Claim", "Coupons", new { id = Model.Id }, FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-brand w-100">領取<span class="visually-hidden">「@Model.Title」</span></button>
+                }
+            }
+        </div>
+    </div>
+</article>

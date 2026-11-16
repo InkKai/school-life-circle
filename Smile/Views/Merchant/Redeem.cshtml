@@ -1,0 +1,58 @@
+﻿@{
+    ViewBag.Title = "掃碼核銷";
+    var store = (Store)ViewBag.Store;
+}
+
+<h1 class="mb-3">@store.Name</h1>
+@Html.Partial("_MerchantNav", store)
+
+@if (ViewBag.Success != null)
+{
+    <div class="alert alert-success fs-4" role="alert"><strong>✓ @ViewBag.Success</strong></div>
+}
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger fs-5" role="alert"><strong>✗ 無法核銷：</strong>@ViewBag.Error</div>
+}
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card card-body">
+            <h2 class="h5">用相機掃描</h2>
+            <div id="reader" class="mb-2"></div>
+            <button type="button" id="startScan" class="btn btn-smile btn-lg">開啟相機掃描</button>
+            <p class="small mt-2 mb-0">需要允許瀏覽器使用相機；網站必須是 HTTPS 才能開相機。</p>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        @using (Html.BeginForm("Redeem", "Merchant", new { storeId = store.Id }, FormMethod.Post, new { @class = "card card-body", id = "redeemForm" }))
+        {
+            @Html.AntiForgeryToken()
+            <h2 class="h5">或輸入核銷碼</h2>
+            <label for="code" class="form-label">核銷碼（顯示在顧客 QR Code 下方）</label>
+            <input type="text" id="code" name="code" class="form-control form-control-lg code-text mb-3" placeholder="SMILE-XXXXXXXX" autocomplete="off" autocapitalize="characters" required />
+            <button type="submit" class="btn btn-smile btn-lg">確認核銷</button>
+        }
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        document.getElementById('startScan').addEventListener('click', function () {
+            var btn = this;
+            if (typeof Html5Qrcode === 'undefined') { alert('掃描元件載入失敗，請改用輸入核銷碼'); return; }
+            btn.disabled = true;
+            var scanner = new Html5Qrcode('reader');
+            scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: 220 }, function (text) {
+                scanner.stop().then(function () {
+                    document.getElementById('code').value = text;
+                    document.getElementById('redeemForm').submit();
+                });
+            }).catch(function () {
+                btn.disabled = false;
+                alert('無法開啟相機，請改用輸入核銷碼');
+            });
+        });
+    </script>
+}

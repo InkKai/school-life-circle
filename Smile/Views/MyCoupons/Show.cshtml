@@ -1,0 +1,51 @@
+﻿@model UserCoupon
+@{
+    ViewBag.Title = "優惠券 QR Code";
+    var shareUrl = (string)ViewBag.ShareUrl;
+}
+
+<p>@Html.ActionLink("← 回我的優惠券", "Index")</p>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        @Html.Partial("_QrPanel", Model)
+
+        @if (Model.Status == CouponStatus.Available && Model.Coupon.EndDate >= DateTime.Today)
+        {
+            <div class="card card-body mt-3" id="share">
+                <h2 class="h5">傳給家人</h2>
+                <p class="small text-ink-2">家人不用註冊，打開連結就能用。一張券只能用一次。</p>
+                @if (shareUrl == null)
+                {
+                    using (Html.BeginForm("Share", "MyCoupons", new { id = Model.Id }, FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-smile">產生分享連結</button>
+                    }
+                }
+                else
+                {
+                    <label for="shareLink" class="form-label">分享連結</label>
+                    <div class="input-group mb-2">
+                        <input id="shareLink" class="form-control" value="@shareUrl" readonly />
+                        <button class="btn btn-outline-secondary" type="button" id="copyBtn">複製</button>
+                    </div>
+                    <a class="btn btn-success" target="_blank" rel="noopener"
+                       href="https://social-plugins.line.me/lineit/share?url=@Url.Encode(shareUrl)">用 LINE 傳給家人（另開視窗）</a>
+                    <p class="small mt-2 mb-0">拿到連結的人都能使用這張券，請只傳給信任的人。</p>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var btn = document.getElementById('copyBtn');
+        if (btn) btn.addEventListener('click', function () {
+            var input = document.getElementById('shareLink');
+            input.select();
+            (navigator.clipboard ? navigator.clipboard.writeText(input.value) : Promise.resolve(document.execCommand('copy')))
+                .then(function () { btn.textContent = '已複製'; });
+        });
+    </script>
+}

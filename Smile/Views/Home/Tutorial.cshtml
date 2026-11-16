@@ -1,0 +1,59 @@
+﻿@{
+    ViewBag.Title = "使用教學";
+    var steps = new[] {
+        new[] { "找店", "按下面的「地圖」，或在首頁按「搜尋店名或商品」。可以看到離學校最近的店，以及走路要幾分鐘。" },
+        new[] { "領優惠券", "看到喜歡的優惠，按「領取」。第一次領要先註冊，只需要電子郵件和密碼。" },
+        new[] { "到店出示", "到店後按下面的「優惠券」，選「我的優惠券」，按「出示 QR」，把手機拿給店員看。" },
+        new[] { "店員掃碼", "店員用手機掃一下就完成了。付款照平常方式在店裡付，網站不收任何錢。" },
+        new[] { "集點", "結帳時按下面的「我的」，把會員卡給店員掃，集滿就能兌換。" },
+        new[] { "傳給家人或好友", "在「我的優惠券」按「傳給家人」，家人不用註冊，打開連結就能用；也可以按「送好友」。" }
+    };
+}
+
+<div class="d-flex align-items-center gap-3 mb-3">
+    <img src="@Url.Content("~/Content/img/mascot-point.svg")" alt="" width="76" height="80" />
+    <div>
+        <h1 class="h3 fw-bold mb-1">使用教學</h1>
+        <p class="mb-0 text-ink-2">照著做就好，也可以請家人或同學陪你一起操作。</p>
+    </div>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <a class="btn btn-brand" href="@Url.Action("Index", "Home", new { tour = 1 })">@Ui.Ic("compass") 讓小圈帶你走一次</a>
+    <a class="btn btn-soft" href="@Url.Action("Index", "Stores")">直接開始找店</a>
+</div>
+
+<p class="panel">覺得字太小？按右上角的「<strong>大字</strong>」，整個網站的字和按鈕都會放大。</p>
+
+<ol class="list-unstyled">
+    @for (int i = 0; i < steps.Length; i++)
+    {
+        <li class="panel mb-2 d-flex gap-3 align-items-start">
+            <span class="step-num" aria-hidden="true">@(i + 1)</span>
+            <div>
+                <h2 class="h5 fw-bold mb-1">@steps[i][0]</h2>
+                <p class="mb-0">@steps[i][1]</p>
+            </div>
+        </li>
+    }
+</ol>
+
+<h2 class="h5 fw-bold mt-4">常見問題</h2>
+<div class="faq">
+    <details>
+        <summary>一張優惠券可以用幾次？</summary>
+        <p>每張只能用一次。傳給家人後誰先用就算誰的，用掉就不能再用。</p>
+    </details>
+    <details>
+        <summary>不想開定位可以嗎？</summary>
+        <p>可以。直接選學校，系統會用學校的位置計算距離。</p>
+    </details>
+    <details>
+        <summary>店家標示「輪椅可進入」可信嗎？</summary>
+        <p>標示「已查證」代表平台實地確認過；其他是店家自填或志工標註，出發前可以先打電話確認。</p>
+    </details>
+    <details>
+        <summary>等級和徽章可以換東西嗎？</summary>
+        <p>不能。等級和徽章只是紀錄你用了多少，不能折抵消費；要折抵請用優惠券或各店的集點卡。</p>
+    </details>
+</div>

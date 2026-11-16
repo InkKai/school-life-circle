@@ -1,0 +1,204 @@
+﻿@model PosViewModel
+@{
+    Layout = "~/Views/Shared/_PosLayout.cshtml";
+    ViewBag.Title = "POS 收銀模式";
+    var s = Model.Store;
+    var stampOn = s.StampGoal > 0;
+    var stamps = Model.Card != null ? Model.Card.Stamps : 0;
+}
+
+<header class="pos-top">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <span class="pos-logo" aria-hidden="true">🧾</span>
+        <div>
+            <p class="mb-0 small text-white-50">學區生活圈 POS</p>
+            @if (Model.Stores.Count > 1)
+            {
+                <form method="get" action="@Url.Action("Pos")" class="m-0">
+                    <label for="storeSwitch" class="visually-hidden">切換店家</label>
+                    <select id="storeSwitch" name="storeId" class="form-select form-select-sm pos-select" onchange="this.form.submit()">
+                        @foreach (var st in Model.Stores)
+                        {
+                            <option value="@st.Id" @(st.Id == s.Id ? "selected" : "")>@st.Name</option>
+                        }
+                    </select>
+                </form>
+            }
+            else
+            {
+                <h1 class="h5 mb-0 fw-bold">@s.Name</h1>
+            }
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <span class="pos-clock" id="clock" aria-hidden="true"></span>
+        <a class="btn btn-outline-light" href="@Url.Action("Index", new { storeId = s.Id })">離開 POS</a>
+    </div>
+</header>
+
+<main id="main" class="pos-main">
+    @if (Model.Stores.Count > 1)
+    {
+        <h1 class="visually-hidden">@s.Name POS 收銀模式</h1>
+    }
+
+    <div class="pos-result @(Model.Message == null ? "idle" : Model.IsError ? "err" : "ok")" role="@(Model.IsError ? "alert" : "status")">
+        @if (Model.Message == null)
+        {
+            <span aria-hidden="true">👋</span><span>請掃描顧客的優惠券或會員卡</span>
+        }
+        else
+        {
+            <span aria-hidden="true">@(Model.IsError ? "✗" : "✓")</span><span>@Model.Message</span>
+        }
+    </div>
+
+    <div class="pos-grid">
+        <section class="pos-panel" aria-labelledby="scanTitle">
+            <h2 id="scanTitle" class="pos-h">掃描或輸入</h2>
+            @using (Html.BeginForm("PosScan", "Merchant", new { storeId = s.Id }, FormMethod.Post, new { id = "scanForm", autocomplete = "off" }))
+            {
+                @Html.AntiForgeryToken()
+                <label for="code" class="visually-hidden">優惠券核銷碼或 10 位數會員編號</label>
+                <input type="text" id="code" name="code" class="pos-display" placeholder="會員編號 / SMILE-XXXXXXXX" autocapitalize="characters" autofocus aria-describedby="codeHelp" />
+                <p id="codeHelp" class="small text-white-50 mt-1 mb-2">10 位數字是會員卡；SMILE- 開頭是優惠券。接條碼槍時直接掃描即可，會自動送出。</p>
+                <div class="pos-keypad" role="group" aria-label="數字鍵盤">
+                    @foreach (var k in new[] { "1", "2", "3", "4", "5", "6", "7", "8", "9" })
+                    {
+                        <button type="button" class="pos-key" data-key="@k">@k</button>
+                    }
+                    <button type="button" class="pos-key pos-key-fn" data-key="clear" aria-label="全部清除">清除</button>
+                    <button type="button" class="pos-key" data-key="0">0</button>
+                    <button type="button" class="pos-key pos-key-fn" data-key="back" aria-label="刪除一個字">⌫</button>
+                </div>
+                <div class="d-grid gap-2 mt-3">
+                    <button type="submit" class="btn btn-brand btn-lg pos-go">確認</button>
+                    <button type="button" id="startScan" class="btn btn-outline-light btn-lg"><span aria-hidden="true">📷</span> 用相機掃描</button>
+                </div>
+                <div id="reader" class="mt-2"></div>
+            }
+        </section>
+
+        <section class="pos-panel" aria-labelledby="memberTitle">
+            <h2 id="memberTitle" class="pos-h">會員集點</h2>
+            @if (Model.Member == null)
+            {
+                <div class="pos-empty">
+                    <p class="display-6 mb-2" aria-hidden="true">💳</p>
+                    <p class="mb-1">請顧客打開「會員卡」頁，掃描上面的 QR Code。</p>
+                    @if (stampOn)
+                    {
+                        <p class="small text-white-50 mb-0">本店集點：集滿 @s.StampGoal 點換「@s.StampReward」</p>
+                    }
+                    else
+                    {
+                        <p class="small mb-0"><a class="link-light" href="@Url.Action("Stamps", new { storeId = s.Id })">本店還沒開啟集點卡，去設定</a></p>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="fs-4 fw-bold mb-0">@Model.Member.DisplayName</p>
+                <p class="small text-white-50">會員編號末四碼 @Model.Member.MemberCode.Substring(6)</p>
+                if (stampOn)
+                {
+                    <p class="mb-2"><strong class="fs-2">@stamps</strong> / @s.StampGoal 點　<span class="text-white-50">集滿換「@s.StampReward」</span></p>
+                    <div class="stamp-grid dark mb-3" role="img" aria-label="已集 @stamps 點，共需 @s.StampGoal 點">
+                        @for (int i = 1; i <= Math.Max(s.StampGoal, stamps); i++)
+                        {
+                            <span class="stamp @(i <= stamps ? "on" : "")" aria-hidden="true">@(i <= stamps ? "★" : "")</span>
+                        }
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap mb-2">
+                        @foreach (var n in new[] { 1, 2, 3 })
+                        {
+                            using (Html.BeginForm("PosStamp", "Merchant", new { storeId = s.Id }, FormMethod.Post, new { @class = "flex-fill" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="memberCode" value="@Model.Member.MemberCode" />
+                                <input type="hidden" name="count" value="@n" />
+                                <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold">蓋 @n 點</button>
+                            }
+                        }
+                    </div>
+                    using (Html.BeginForm("PosReward", "Merchant", new { storeId = s.Id }, FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="memberCode" value="@Model.Member.MemberCode" />
+                        if (stamps >= s.StampGoal)
+                        {
+                            <button type="submit" class="btn btn-success btn-lg w-100 fw-bold"><span aria-hidden="true">🎁</span> 兌換「@s.StampReward」（扣 @s.StampGoal 點）</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-secondary btn-lg w-100" disabled>還差 @(s.StampGoal - stamps) 點可兌換</button>
+                        }
+                    }
+                }
+                else
+                {
+                    <p><a class="link-light" href="@Url.Action("Stamps", new { storeId = s.Id })">本店還沒開啟集點卡，去設定</a></p>
+                }
+                <a class="btn btn-outline-light w-100 mt-2" href="@Url.Action("Pos", new { storeId = s.Id })">完成，下一位顧客</a>
+            }
+        </section>
+
+        <section class="pos-panel" aria-labelledby="todayTitle">
+            <h2 id="todayTitle" class="pos-h">今天</h2>
+            <div class="pos-stats">
+                <div><strong>@Model.TodayRedemptions</strong><span>張券核銷</span></div>
+                <div><strong>@Model.TodayStamps</strong><span>點已蓋</span></div>
+                <div><strong>@Model.TodayRewards</strong><span>次兌換</span></div>
+            </div>
+            @if (!Model.Log.Any())
+            {
+                <p class="text-white-50 mt-3 mb-0">今天還沒有紀錄。</p>
+            }
+            else
+            {
+                <ul class="pos-log">
+                    @foreach (var l in Model.Log)
+                    {
+                        <li><span class="t">@l.Time.ToString("HH:mm")</span><span aria-hidden="true">@l.Icon</span> @l.Text</li>
+                    }
+                </ul>
+            }
+        </section>
+    </div>
+</main>
+
+@section scripts {
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        (function () {
+            var input = document.getElementById('code');
+            document.querySelectorAll('.pos-key').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    var k = b.getAttribute('data-key');
+                    if (k === 'clear') input.value = '';
+                    else if (k === 'back') input.value = input.value.slice(0, -1);
+                    else input.value += k;
+                    input.focus();
+                });
+            });
+            function tick() {
+                var d = new Date();
+                document.getElementById('clock').textContent = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+            }
+            tick(); setInterval(tick, 10000);
+
+            document.getElementById('startScan').addEventListener('click', function () {
+                var btn = this;
+                if (typeof Html5Qrcode === 'undefined') { alert('掃描元件載入失敗，請改用輸入'); return; }
+                btn.disabled = true;
+                var scanner = new Html5Qrcode('reader');
+                scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: 220 }, function (text) {
+                    scanner.stop().then(function () { input.value = text; document.getElementById('scanForm').submit(); });
+                }).catch(function () {
+                    btn.disabled = false;
+                    alert('無法開啟相機（網站需為 HTTPS，且要允許使用相機），請改用輸入');
+                });
+            });
+        })();
+    </script>
+}

@@ -1,0 +1,85 @@
+﻿@model List<Store>
+@{
+    ViewBag.Title = "店家審核";
+    var status = (string)ViewBag.Status;
+    var pendingCount = (int)ViewBag.PendingCount;
+    int total = ViewBag.Total;
+    var q = (string)ViewBag.Query;
+    var tabs = new[] { StoreStatus.Pending, StoreStatus.Approved, StoreStatus.Rejected };
+}
+
+<h1 class="mb-3">平台管理</h1>
+@Html.Partial("_AdminNav")
+
+<div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+    @foreach (var t in tabs)
+    {
+        @Html.ActionLink(StoreStatus.Display(t) + (t == StoreStatus.Pending ? "（" + pendingCount + "）" : ""), "Stores", new { status = t }, new { @class = "btn btn-sm " + (status == t ? "btn-dark" : "btn-outline-dark") })
+    }
+    <form method="get" action="@Url.Action("Stores")" class="d-flex gap-2 ms-auto" role="search">
+        <input type="hidden" name="status" value="@status" />
+        <label for="q" class="visually-hidden">搜尋店名</label>
+        <input id="q" name="q" value="@q" class="form-control form-control-sm" placeholder="搜尋店名" />
+        <button type="submit" class="btn btn-sm btn-outline-dark">搜尋</button>
+    </form>
+</div>
+@if (status == StoreStatus.Approved && string.IsNullOrEmpty(q))
+{
+    <p class="small text-ink-2">只列出已加入平台的店家；OpenStreetMap 名錄請用搜尋。「精選」會出現在首頁的精選店家（加值方案的曝光位置）。</p>
+}
+else if (total > Model.Count)
+{
+    <p class="small text-ink-2">共 @total 間，只顯示前 @Model.Count 間，請用搜尋縮小範圍。</p>
+}
+
+@if (!Model.Any())
+{
+    <p>沒有@(StoreStatus.Display(status))的店家。</p>
+}
+@foreach (var s in Model)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+                <div>
+                    <h2 class="h5 mb-1">
+                        @Html.ActionLink(s.Name, "Details", "Stores", new { id = s.Id }, null)
+                        @if (s.IsFeatured)
+                        {
+                            <span class="chip chip-brand ms-1">精選</span>
+                        }
+                    </h2>
+                    <p class="mb-1 text-muted-smile">@s.Category.Name｜@s.Address｜@Ui.DataSourceLabel(s)｜申請人：@s.Owner.DisplayName</p>
+                    <p class="mb-0 small">
+                        無障礙自填：入口無階梯 @(s.StepFreeEntrance ? "是" : "否")、斜坡道 @(s.HasRamp ? "是" : "否")、無障礙廁所 @(s.AccessibleToilet ? "是" : "否")
+                        ｜@(s.AccessibilityVerified ? "已查證" : "未查證")
+                    </p>
+                </div>
+                @if (s.Status == StoreStatus.Approved && s.DataSource != DataSources.Osm)
+                {
+                    using (Html.BeginForm("ToggleFeatured", "Admin", new { id = s.Id }, FormMethod.Post, new { @class = "d-flex align-items-center" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn @(s.IsFeatured ? "btn-outline-secondary" : "btn-outline-brand")">@(s.IsFeatured ? "取消精選" : "設為精選")<span class="visually-hidden">：@s.Name</span></button>
+                    }
+                }
+                @if (s.Status == StoreStatus.Pending || s.Status == StoreStatus.Rejected)
+                {
+                    using (Html.BeginForm("Review", "Admin", new { id = s.Id }, FormMethod.Post, new { @class = "d-flex flex-wrap gap-2 align-items-center" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <div class="form-check me-2">
+                            <input class="form-check-input" type="checkbox" name="verified" value="true" id="v@(s.Id)" @(s.AccessibilityVerified ? "checked" : "") />
+                            <label class="form-check-label" for="v@(s.Id)">無障礙資訊已實地查證</label>
+                        </div>
+                        <button type="submit" name="decision" value="approve" class="btn btn-success">核准上架</button>
+                        if (s.Status == StoreStatus.Pending)
+                        {
+                            <button type="submit" name="decision" value="reject" class="btn btn-outline-danger">退回</button>
+                        }
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}

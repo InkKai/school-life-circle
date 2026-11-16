@@ -1,0 +1,60 @@
+﻿@model StampSettingsViewModel
+@{
+    ViewBag.Title = "集點卡設定";
+    var store = Model.Store;
+    var preview = Model.StampGoal > 0 ? Model.StampGoal : 10;
+}
+
+<h1 class="mb-3">@store.Name</h1>
+@Html.Partial("_MerchantNav", store)
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="panel">
+            <h2 class="h5 fw-bold">集點卡設定</h2>
+            <p class="text-ink-2">顧客出示會員卡，店員在 POS 上按「蓋章」就能集點。點數只能在本店使用，平台不經手任何金錢。</p>
+            @using (Html.BeginForm("Stamps", "Merchant", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.StoreId)
+                @Html.ValidationSummary(true, "", new { @class = "alert alert-danger", role = "alert" })
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.StampGoal, new { @class = "form-label fw-semibold" })
+                    @Html.TextBoxFor(m => m.StampGoal, new { @class = "form-control form-control-lg", type = "number", min = "0", max = "30" })
+                    @Html.ValidationMessageFor(m => m.StampGoal, "", new { @class = "text-danger" })
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.StampReward, new { @class = "form-label fw-semibold" })
+                    @Html.TextBoxFor(m => m.StampReward, new { @class = "form-control form-control-lg", placeholder = "例如：中杯飲料一杯" })
+                    @Html.ValidationMessageFor(m => m.StampReward, "", new { @class = "text-danger" })
+                </div>
+                <button type="submit" class="btn btn-brand btn-lg w-100">儲存</button>
+            }
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="panel mb-3">
+            <h2 class="h5 fw-bold">顧客看到的樣子</h2>
+            <div class="stamp-card-preview">
+                <p class="fw-bold mb-1">@store.Name</p>
+                <div class="stamp-grid mb-2" role="img" aria-label="集點卡範例：共 @preview 格，已集 3 點">
+                    @for (int i = 1; i <= preview; i++)
+                    {
+                        <span class="stamp @(i <= 3 ? "on" : "")" aria-hidden="true">@(i <= 3 ? "★" : "")</span>
+                    }
+                </div>
+                <p class="small text-ink-2 mb-0">集滿 @preview 點換「@(string.IsNullOrEmpty(Model.StampReward) ? "（請填寫）" : Model.StampReward)」</p>
+            </div>
+        </div>
+        <div class="panel">
+            <h2 class="h5 fw-bold">累計</h2>
+            <div class="row text-center g-2">
+                <div class="col-4"><p class="fs-3 fw-bold mb-0">@Model.CardCount</p><p class="small text-ink-2 mb-0">位顧客集點</p></div>
+                <div class="col-4"><p class="fs-3 fw-bold mb-0">@Model.TotalStamps</p><p class="small text-ink-2 mb-0">點已蓋</p></div>
+                <div class="col-4"><p class="fs-3 fw-bold mb-0">@Model.TotalRewards</p><p class="small text-ink-2 mb-0">次兌換</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts { @Scripts.Render("~/bundles/jqueryval") }

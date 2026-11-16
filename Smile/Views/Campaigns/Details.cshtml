@@ -1,0 +1,50 @@
+﻿@model Campaign
+@{
+    ViewBag.Title = Model.Title;
+    ViewBag.Description = Model.Tagline;
+    var today = DateTime.Today;
+    var coupons = (List<Coupon>)ViewBag.Coupons;
+    var claimed = (int[])ViewBag.Claimed;
+    var left = (Model.EndDate.Date - today).Days;
+    var status = !Model.IsActive ? "已下架"
+        : Model.IsRunning(today) ? (left <= 0 ? "今天最後一天" : "進行中・剩 " + left + " 天")
+        : Model.IsUpcoming(today) ? "即將開始・" + Model.StartDate.ToString("M/d") + " 起"
+        : "已結束";
+}
+
+<p class="mb-2"><a href="@Url.Action("Index")">← 所有活動</a></p>
+<section class="camp-hero mb-3" style="background:@Ui.ThemeGradient(Model.Theme)">
+    <div>
+        <span class="camp-chip">@status</span>
+        <h1>@Model.Title</h1>
+        <p class="mb-2">@Model.Tagline</p>
+        <p class="small mb-3">@Model.StartDate.ToString("yyyy-MM-dd") ～ @Model.EndDate.ToString("yyyy-MM-dd")</p>
+        <button type="button" class="btn btn-light btn-sm fw-bold" data-share-url="@Request.Url.GetLeftPart(UriPartial.Path)" data-share-title="@Model.Title" data-share-text="@Model.Title：@Model.Tagline">@Ui.Ic("share") <span class="share-label">揪朋友一起</span></button>
+    </div>
+    <img class="camp-mascot" src="@Url.Content("~/Content/img/mascot-happy.svg")" alt="" />
+</section>
+
+<h2 class="h5 fw-bold">活動優惠（@coupons.Count）</h2>
+@if (!coupons.Any())
+{
+    <div class="empty-state">
+        <img class="mascot" src="@Url.Content("~/Content/img/mascot-sleep.svg")" alt="" />
+        <p>@(Model.IsUpcoming(today) ? "活動還沒開始，店家正在準備優惠" : "這一檔目前沒有可以領的優惠")</p>
+        <a class="btn btn-brand" href="@Url.Action("Index", "Coupons")">看其他優惠</a>
+    </div>
+}
+<div class="row g-3">
+    @foreach (var c in coupons)
+    {
+        <div class="col-12 col-md-6 col-lg-4">@Html.Partial("_CouponCard", c, new ViewDataDictionary { { "claimed", claimed.Contains(c.Id) } })</div>
+    }
+</div>
+
+@if (User.IsInRole(AppRoles.Merchant))
+{
+    <div class="panel mt-4 d-flex flex-wrap align-items-center gap-3">
+        @Ui.Ic("mega", "ic fs-3 text-warning")
+        <div class="flex-grow-1"><strong>你的優惠也可以參加</strong><br /><span class="small text-ink-2">新增或修改優惠券時，在「參加活動」選這一檔。</span></div>
+        <a class="btn btn-outline-brand" href="@Url.Action("Coupons", "Merchant")">去優惠管理</a>
+    </div>
+}

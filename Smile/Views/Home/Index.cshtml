@@ -1,0 +1,324 @@
+﻿@model HomeViewModel
+@{
+    ViewBag.Title = "首頁";
+    var large = Request.Cookies["textsize"] != null && Request.Cookies["textsize"].Value == "large";
+    var originId = Model.Origin != null ? Model.Origin.Id : (int?)null;
+    var quest = Model.Quest;
+}
+
+@helper QuestItem(bool done, string text, string url, string icon)
+{
+    <li class="@(done ? "done" : "")">
+        <span class="q-ico">@Ui.Ic(done ? "check" : icon)</span>
+        @if (done)
+        {
+            <span>@text<span class="visually-hidden">（已完成）</span></span>
+        }
+        else
+        {
+            <a href="@url">@text</a>
+        }
+    </li>
+}
+
+<h1 class="visually-hidden">學區生活圈首頁</h1>
+
+<div class="home-bar mb-3">
+    <form method="get" action="@Url.Action("Index")" class="m-0" data-tour="location">
+        <label class="location-pill">
+            @Ui.Ic("pin")
+            <span class="visually-hidden">從哪所學校出發</span>
+            <select name="schoolId" onchange="this.form.submit()">
+                @foreach (var s in Model.Schools)
+                {
+                    <option value="@s.Id" @(originId == s.Id ? "selected" : "")>@s.ShortName 2 公里內</option>
+                }
+            </select>
+        </label>
+        <noscript><button class="btn btn-sm btn-soft">切換</button></noscript>
+    </form>
+    @using (Html.BeginForm("ToggleTextSize", "Home", FormMethod.Post, new { @class = "m-0" }))
+    {
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
+        <button type="submit" class="btn btn-sm btn-soft" aria-pressed="@(large ? "true" : "false")" data-tour="textsize">@Ui.Ic("text") 大字模式</button>
+    }
+</div>
+
+@* 小圈的問候：依時段建議現在適合找什麼 *@
+<section class="hello mb-3" aria-label="小圈的問候" data-tour="hello">
+    <img class="hello-mascot" src="@Url.Content("~/Content/img/mascot-" + Model.MascotPose + ".svg")" alt="" width="68" height="72" />
+    <div class="hello-bubble">
+        <p class="hello-title">@Model.GreetingTitle</p>
+        <p class="hello-text">@Model.GreetingText</p>
+        <div class="d-flex flex-wrap gap-2">
+            @if (!Request.IsAuthenticated)
+            {
+                <a class="btn btn-brand btn-sm" href="@Url.Action("Register", "Account")">註冊領券</a>
+            }
+            <a class="btn @(Request.IsAuthenticated ? "btn-brand" : "btn-soft") btn-sm" href="@Url.Action("Pick", "Stores", new { schoolId = originId, kind = Model.GreetingKind })">@Model.GreetingCta</a>
+        </div>
+    </div>
+</section>
+
+@if (ViewBag.Expiring != null && (int)ViewBag.Expiring > 0)
+{
+    <a class="expiring-bar mb-3" href="@Url.Action("Index", "MyCoupons")">
+        @Ui.Ic("clock", "ic fs-5")
+        <span class="flex-grow-1">你有 <strong>@ViewBag.Expiring 張券</strong> 3 天內到期</span>
+        <span aria-hidden="true">去看看 →</span>
+    </a>
+}
+
+<a class="search-bar search-link mb-3" href="@Url.Action("Index", "Stores", new { schoolId = originId })">
+    @Ui.Ic("search")<span class="text-ink-2">搜尋店名或商品</span>
+</a>
+
+@if (Model.FeaturedCoupons.Any())
+{
+    <section aria-labelledby="dealsTitle" data-tour="deals">
+        <h2 id="dealsTitle" class="visually-hidden">今日優惠</h2>
+        <div id="deals" class="carousel slide deal-carousel" data-bs-touch="true" data-bs-interval="3500" data-bs-pause="hover">
+            <div class="carousel-indicators">
+                @for (int i = 0; i < Model.FeaturedCoupons.Count; i++)
+                {
+                    <button type="button" data-bs-target="#deals" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-label="第 @(i + 1) 張優惠" @(i == 0 ? "aria-current=true" : "")></button>
+                }
+            </div>
+            <div class="carousel-inner">
+                @for (int i = 0; i < Model.FeaturedCoupons.Count; i++)
+                {
+                    var deal = Model.FeaturedCoupons[i];
+                    var days = (deal.EndDate.Date - DateTime.Today).Days;
+                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                        <div class="deal-slide" style="background:@Ui.Gradient(i)">
+                            <div class="deal-text">
+                                <p class="deal-tag">今日優惠@(days <= 3 ? "・快到期" : "")</p>
+                                <p class="deal-big">@Ui.CouponHeadline(deal.Title)</p>
+                                <h3 class="deal-title">@deal.Title</h3>
+                                <p class="deal-store">@deal.Store.Name</p>
+                                <a class="btn btn-light fw-bold" href="@Url.Action("Details", "Coupons", new { id = deal.Id })">領取<span class="visually-hidden">「@deal.Title」</span></a>
+                            </div>
+                            @if (!string.IsNullOrEmpty(deal.Store.PhotoUrl))
+                            {
+                                <img class="deal-photo" src="@Url.Content(deal.Store.PhotoUrl)" alt="" />
+                            }
+                            else
+                            {
+                                <span class="deal-art">@Ui.Art(deal.Store)</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#deals" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">上一張</span></button>
+            <button class="carousel-control-next" type="button" data-bs-target="#deals" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">下一張</span></button>
+            <button type="button" class="deal-pause" id="dealPause" aria-pressed="false"><span class="ico" aria-hidden="true">❚❚</span><span class="lbl">暫停輪播</span></button>
+        </div>
+    </section>
+}
+
+@* 新手任務：帶新會員做完最重要的三件事 *@
+@if (quest != null)
+{
+    <section class="quest panel mt-3" aria-labelledby="questTitle">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h2 id="questTitle" class="h6 fw-bold mb-0">新手任務</h2>
+            <span class="quest-count">@quest.QuestDone / 3</span>
+        </div>
+        <div class="progress quest-bar mb-2" role="progressbar" aria-label="新手任務進度" aria-valuenow="@quest.QuestDone" aria-valuemin="0" aria-valuemax="3">
+            <div class="progress-bar" style="width:@(quest.QuestDone * 100 / 3)%"></div>
+        </div>
+        <ul class="quest-list">
+            @QuestItem(quest.QuestClaim, "領一張券", Url.Action("Index", "Coupons"), "ticket")
+            @QuestItem(quest.QuestFavorite, "收藏一間店", Url.Action("Index", "Stores", new { schoolId = originId }), "heart")
+            @QuestItem(quest.QuestFriend, "加一位好友", Url.Action("Index", "Friends"), "users")
+        </ul>
+        <p class="small text-ink-2 mb-0">三個都完成，小圈送你「新手畢業」徽章</p>
+    </section>
+}
+
+@if (Request.IsAuthenticated && ViewBag.CheckedToday != null)
+{
+    var checkedToday = (bool)ViewBag.CheckedToday;
+    int streak = ViewBag.Streak;
+    <a class="checkin-bar mt-3 @(checkedToday ? "done" : "")" href="@Url.Action("Index", "CheckIn")">
+        <span class="ci-ico">@Ui.Ic(checkedToday ? "check" : "gift")</span>
+        <span class="flex-grow-1">
+            @if (checkedToday)
+            {
+                <strong>今天已簽到</strong><br /><small>連續 @streak 天，明天再來抽扭蛋</small>
+            }
+            else
+            {
+                <strong>今天還沒簽到</strong><br /><small>@(streak > 0 ? "已連續 " + streak + " 天，" : "")簽到轉一次扭蛋</small>
+            }
+        </span>
+        <span aria-hidden="true">→</span>
+    </a>
+}
+
+@if (Model.Campaign != null)
+{
+    <div class="mt-3">
+        @Html.Partial("_CampaignBanner", Model.Campaign, new ViewDataDictionary { { "count", Model.CampaignCoupons } })
+    </div>
+}
+
+<nav class="h-scroll cat-row mt-3" aria-label="店家分類" data-tour="cats">
+    @foreach (var cat in Model.Categories)
+    {
+        <a class="cat-item" href="@Url.Action("Index", "Stores", new { categoryId = cat.Id, schoolId = originId })">
+            <span class="cat-ico" style="background:@Ui.Tint(cat)">@Ui.Art(cat)</span>@cat.Name
+        </a>
+    }
+</nav>
+
+@if (Model.FeaturedStores.Any())
+{
+    <div class="section-head">
+        <h2>精選店家</h2>
+        <span class="small text-ink-2">平台合作店家</span>
+    </div>
+    <div class="h-scroll feat-row">
+        @foreach (var item in Model.FeaturedStores)
+        {
+            var fs = item.Store;
+            <article class="feat-card">
+                <div class="feat-img" style="background:@Ui.Tint(fs.Category)">
+                    @if (!string.IsNullOrEmpty(fs.PhotoUrl))
+                    {
+                        <img src="@Url.Content(fs.PhotoUrl)" alt="" loading="lazy" />
+                    }
+                    else
+                    {
+                        @Ui.Art(fs)
+                    }
+                    <span class="feat-tag">精選</span>
+                </div>
+                <div class="feat-body">
+                    <h3><a class="stretched-link" href="@Url.Action("Details", "Stores", new { id = fs.Id })">@fs.Name</a></h3>
+                    <p>
+                        @if (item.DistanceMeters.HasValue)
+                        {
+                            <span>@Ui.Ic("walk") @Geo.WalkMinutes(item.DistanceMeters.Value) 分</span>
+                        }
+                        @if (item.ActiveCoupons > 0)
+                        {
+                            <span class="chip chip-brand">@item.ActiveCoupons 張優惠</span>
+                        }
+                    </p>
+                </div>
+            </article>
+        }
+    </div>
+}
+
+@if (Model.Trending.Count >= 2)
+{
+    <div class="section-head">
+        <h2>大家都在領</h2>
+        <a href="@Url.Action("Index", "Coupons")">全部 →</a>
+    </div>
+    <ol class="rank-list">
+        @for (int i = 0; i < Model.Trending.Count; i++)
+        {
+            var hot = Model.Trending[i];
+            <li>
+                <span class="rank-no" aria-hidden="true">@(i + 1)</span>
+                <span class="rank-big" aria-hidden="true">@Ui.CouponHeadline(hot.Coupon.Title)</span>
+                <span class="rank-info">
+                    <a class="stretched-link" href="@Url.Action("Details", "Coupons", new { id = hot.Coupon.Id })">@hot.Coupon.Title</a>
+                    <small>@hot.Coupon.Store.Name</small>
+                </span>
+                <span class="rank-count">本週 <strong>@hot.WeekClaims</strong> 人領</span>
+            </li>
+        }
+    </ol>
+}
+
+<div class="section-head">
+    <h2>離@(Model.Origin != null ? Model.Origin.ShortName : "學校")最近</h2>
+    <a href="@Url.Action("Index", "Stores", new { schoolId = originId })">更多 →</a>
+</div>
+<div class="row g-2">
+    @foreach (var item in Model.NearbyStores)
+    {
+        <div class="col-12 col-md-6 col-xl-4">@Html.Partial("_StoreRow", item)</div>
+    }
+</div>
+
+@* 猜你喜歡：滑到這裡才載入，再往下滑會載入更多（最多 3 次） *@
+<section id="forYou" class="mt-2" aria-labelledby="forYouTitle" aria-live="polite" data-src="@Url.Action("ForYou", new { schoolId = originId })">
+    <noscript><p><a href="@Url.Action("Index", "Stores")">看更多店家</a></p></noscript>
+</section>
+<div id="forYouSentinel" class="fy-loading"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><button type="button" class="btn btn-soft btn-sm ms-2" id="forYouMore">再推薦一些</button></div>
+
+<a class="partner-strip mt-4" href="@Url.Action("Partner")">
+    @Ui.Ic("store", "ic fs-4")
+    <span class="flex-grow-1"><strong>你是老闆嗎？</strong> 零抽成，免費上架</span>
+    <span aria-hidden="true">→</span>
+</a>
+
+@section scripts {
+    <script>
+        // 今日優惠自動輪播：每 3.5 秒換一張；滑鼠移上去或鍵盤聚焦時暫停；
+        // 可按「暫停」停住（WCAG 2.2.2）；系統設定「減少動態效果」的人不滑動、直接換頁
+        (function () {
+            var el = document.getElementById('deals');
+            if (!el || !window.bootstrap) return;
+            var c = bootstrap.Carousel.getOrCreateInstance(el, { interval: 3500, pause: 'hover', touch: true });
+            var btn = document.getElementById('dealPause');
+            var playing = true;
+            function render() {
+                btn.setAttribute('aria-pressed', playing ? 'false' : 'true');
+                btn.querySelector('.ico').textContent = playing ? '❚❚' : '▶';
+                btn.querySelector('.lbl').textContent = playing ? '暫停輪播' : '繼續輪播';
+            }
+            c.cycle();
+            render();
+            btn.addEventListener('click', function () { playing = !playing; if (playing) c.cycle(); else c.pause(); render(); });
+            el.addEventListener('focusin', function () { c.pause(); });
+            el.addEventListener('focusout', function () { if (playing) c.cycle(); });
+        })();
+    </script>
+    <script>
+        // 猜你喜歡：看到最下面的哨兵才去抓下一頁
+        (function () {
+            var box = document.getElementById('forYou'), sentinel = document.getElementById('forYouSentinel');
+            if (!box || !sentinel || !window.fetch) return;
+            var page = 0, loading = false, done = false;
+            function load() {
+                if (loading || done) return;
+                loading = true;
+                fetch(box.getAttribute('data-src') + (box.getAttribute('data-src').indexOf('?') < 0 ? '?' : '&') + 'page=' + (page + 1), { credentials: 'same-origin' })
+                    .then(function (r) { return r.text(); })
+                    .then(function (html) {
+                        box.insertAdjacentHTML('beforeend', html);
+                        page++;
+                        var last = box.querySelectorAll('.fy-page');
+                        if (!last.length || last[last.length - 1].getAttribute('data-more') !== '1') { done = true; sentinel.remove(); }
+                    })
+                    .catch(function () { done = true; sentinel.remove(); })
+                    .then(function () { loading = false; check(); });
+            }
+            // 用捲動事件判斷有沒有滑到底（比 IntersectionObserver 穩定，背景分頁、省電模式也能用）
+            function check() {
+                if (done || loading) return;
+                if (sentinel.getBoundingClientRect().top < window.innerHeight + 250) load();
+            }
+            document.getElementById('forYouMore').addEventListener('click', load);
+            window.addEventListener('scroll', check, { passive: true });
+            window.addEventListener('resize', check);
+            check();
+        })();
+    </script>
+    @if (ViewBag.StartTour == true)
+    {
+        <script>
+            window.addEventListener('load', function () {
+                if (window.SmileTour) SmileTour.start({ endUrl: '@Url.Action("Index", "Coupons")', endLabel: '領第一張券' });
+            });
+        </script>
+    }
+}

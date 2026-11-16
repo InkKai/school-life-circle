@@ -1,0 +1,13 @@
+﻿@model Store
+@{ var action = ViewContext.RouteData.Values["action"].ToString(); }
+<nav aria-label="店家後台選單" class="d-flex flex-wrap gap-2 mb-4">
+    <a class="btn btn-dark" href="@Url.Action("Pos", new { storeId = Model.Id })"><span aria-hidden="true">🧾</span> 開啟 POS 收銀模式</a>
+    @Html.ActionLink("主控台", "Index", new { storeId = Model.Id }, new { @class = "btn " + (action == "Index" ? "btn-smile" : "btn-outline-smile") })
+    @Html.ActionLink("掃碼核銷", "Redeem", new { storeId = Model.Id }, new { @class = "btn " + (action == "Redeem" ? "btn-smile" : "btn-outline-smile") })
+    @Html.ActionLink("集點卡", "Stamps", new { storeId = Model.Id }, new { @class = "btn " + (action == "Stamps" ? "btn-smile" : "btn-outline-smile") })
+    @Html.ActionLink("商品與服務", "Products", new { storeId = Model.Id }, new { @class = "btn " + (action.Contains("Product") ? "btn-smile" : "btn-outline-smile") })
+    @Html.ActionLink("優惠管理", "Coupons", new { storeId = Model.Id }, new { @class = "btn " + (action.Contains("Coupon") ? "btn-smile" : "btn-outline-smile") })
+    @Html.ActionLink("店頭立牌", "Poster", new { storeId = Model.Id }, new { @class = "btn " + (action == "Poster" ? "btn-smile" : "btn-outline-smile") })
+    @Html.ActionLink("店家照片", "Photo", new { storeId = Model.Id }, new { @class = "btn " + (action == "Photo" ? "btn-smile" : "btn-outline-smile") })
+    @Html.ActionLink("店家資料", "EditStore", new { storeId = Model.Id }, new { @class = "btn " + (action == "EditStore" ? "btn-smile" : "btn-outline-smile") })
+</nav>

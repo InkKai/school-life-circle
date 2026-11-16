@@ -1,0 +1,341 @@
+﻿@model StoreDetailsViewModel
+@{
+    var s = Model.Store;
+    var cat = s.Category;
+    var isOsm = s.DataSource == DataSources.Osm;
+    ViewBag.Title = s.Name;
+}
+@section styles {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+}
+
+@if (s.Status != StoreStatus.Approved)
+{
+    <div class="alert alert-warning rounded-4">此店家狀態：@StoreStatus.Display(s.Status)，一般使用者看不到這個頁面。</div>
+}
+
+<div class="detail-hero" style="background:@Ui.Tint(cat)">
+    @if (!string.IsNullOrEmpty(s.PhotoUrl))
+    {
+        <img src="@Url.Content(s.PhotoUrl)" alt="@s.Name 的店家照片" class="hero-photo" />
+        if (s.IsDemo)
+        {
+            <span class="photo-note">示意照片</span>
+        }
+    }
+    <div id="miniMap" class="@(string.IsNullOrEmpty(s.PhotoUrl) ? "" : "mini-corner")"></div>
+    <p class="visually-hidden">地圖顯示 @s.Name 的位置：@s.Address</p>
+</div>
+<div class="detail-head mb-3">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+        <div class="d-flex gap-3 align-items-center">
+            <span class="cat-ico d-inline-flex align-items-center justify-content-center rounded-4 p-1" style="width:56px;height:56px;background:@Ui.Tint(cat)">@Ui.Art(s)</span>
+            <div>
+                <h1>@s.Name</h1>
+                <p class="mb-0 text-ink-2">
+                    @cat.Name
+                    @if (!string.IsNullOrEmpty(s.Cuisine))
+                    {
+                        <text>・@s.Cuisine</text>
+                    }
+                    @if (Model.AverageRating.HasValue)
+                    {
+                        <text>・★ @Model.AverageRating.Value.ToString("0.0")（@Model.Reviews.Count 則）</text>
+                    }
+                </p>
+            </div>
+        </div>
+        @if (Request.IsAuthenticated)
+        {
+            using (Html.BeginForm("ToggleFavorite", "Stores", new { id = s.Id }, FormMethod.Post, new { @class = "m-0" }))
+            {
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn text-nowrap @(Model.IsFavorite ? "btn-brand" : "btn-outline-brand")" aria-pressed="@(Model.IsFavorite ? "true" : "false")">
+                    <span aria-hidden="true">@(Model.IsFavorite ? "♥" : "♡")</span> @(Model.IsFavorite ? "已收藏" : "收藏")
+                </button>
+            }
+        }
+    </div>
+    <ul class="quick-info">
+        <li>@Ui.Ic("clock")<span class="visually-hidden">營業時間：</span>@(s.OpenHours ?? "營業時間尚無資料")</li>
+        <li>@Ui.Ic("pin")<span class="visually-hidden">地址：</span>@s.Address</li>
+    </ul>
+    @if (!string.IsNullOrEmpty(s.OwnerMessage))
+    {
+        <figure class="owner-say">
+            <blockquote>@s.OwnerMessage</blockquote>
+            <figcaption>老闆的話</figcaption>
+        </figure>
+    }
+    @if (Model.Coupons.Any())
+    {
+        <a class="btn btn-brand btn-lg w-100 mt-3" href="#couponTitle">@Ui.Ic("ticket") 領取優惠券（@Model.Coupons.Count）</a>
+    }
+    <div class="d-flex flex-wrap gap-2 mt-3">
+        <a class="btn btn-sm btn-soft" href="@Ui.GoogleMapsUrl(s)" target="_blank" rel="noopener">@Ui.Ic("camera") 照片與評論<span class="visually-hidden">（Google 地圖，另開視窗）</span></a>
+        <a class="btn btn-sm btn-soft" href="@Ui.StreetViewUrl(s)" target="_blank" rel="noopener">@Ui.Ic("road") 街景<span class="visually-hidden">（Google 街景，另開視窗）</span></a>
+        <button type="button" class="btn btn-sm btn-soft" id="shareStore" data-title="@s.Name" data-url="@Request.Url.GetLeftPart(UriPartial.Path)">@Ui.Ic("share") 分享給朋友</button>
+        @if (s.Phone != null)
+        {
+            <a class="btn btn-sm btn-soft" href="tel:@s.Phone.Replace(" ", "")">@Ui.Ic("phone") 打電話</a>
+        }
+        <span class="chip @(isOsm ? "chip-osm" : s.IsDemo ? "chip-gray" : "chip-soft") align-self-center">@Ui.DataSourceLabel(s)</span>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <section class="panel mb-3" aria-labelledby="infoTitle">
+            <h2 id="infoTitle" class="h5 fw-bold">店家資訊</h2>
+            @if (!string.IsNullOrEmpty(s.Description))
+            {
+                <p>@s.Description</p>
+            }
+            <div class="info-row"><span class="k">地址</span><span>@s.Address</span></div>
+            <div class="info-row"><span class="k">營業時間</span><span>@(s.OpenHours ?? "尚無資料")</span></div>
+            <div class="info-row"><span class="k">電話</span><span>@if (s.Phone != null) {<a href="tel:@s.Phone.Replace(" ", "")">@s.Phone</a>} else {<text>尚無資料</text>}</span></div>
+            <div class="info-row"><span class="k">可用支付</span><span>@(s.PaymentMethods ?? "尚無資料")</span></div>
+            @if (isOsm)
+            {
+                <p class="small text-ink-2 mt-2 mb-0">資料來源：<a href="https://www.openstreetmap.org/@(s.OsmId.StartsWith("n") ? "node" : s.OsmId.StartsWith("w") ? "way" : "relation")/@s.OsmId.Substring(1)" target="_blank" rel="noopener">OpenStreetMap</a>（ODbL）。資訊可能不完整或過時，出發前建議先確認。</p>
+            }
+        </section>
+
+        <section class="panel mb-3" aria-labelledby="a11yTitle">
+            <h2 id="a11yTitle" class="h5 fw-bold">@Ui.Ic("wheel") 無障礙資訊</h2>
+            @if (!s.AccessibilityKnown)
+            {
+                <p class="mb-0">這間店還沒有無障礙資訊。出發前建議先打電話確認入口是否有階梯。</p>
+            }
+            else
+            {
+                <div class="info-row"><span class="k">入口無階梯</span><span>@(s.StepFreeEntrance ? "是" : "否")</span></div>
+                if (!isOsm)
+                {
+                    <div class="info-row"><span class="k">斜坡道</span><span>@(s.HasRamp ? "有" : "沒有")</span></div>
+                    <div class="info-row"><span class="k">無障礙廁所</span><span>@(s.AccessibleToilet ? "有" : "沒有")</span></div>
+                }
+                <p class="small text-ink-2 mt-2 mb-0">@(s.AccessibilityVerified ? "以上資訊已由平台實地查證。" : isOsm ? "以上資訊來自 OpenStreetMap 志工標註，尚未經平台查證。" : "以上資訊由店家自行填寫，尚未查證。")</p>
+            }
+        </section>
+
+        @if (Model.Products.Any())
+        {
+            <section class="panel mb-3" aria-labelledby="menuTitle">
+                <h2 id="menuTitle" class="h5 fw-bold">商品與服務</h2>
+                @foreach (var p in Model.Products)
+                {
+                    <div class="info-row justify-content-between">
+                        <span>@p.Name @if (!string.IsNullOrEmpty(p.Description)) {<br /><small class="text-ink-2">@p.Description</small>}</span>
+                        <strong class="text-nowrap">@(p.Price == 0 ? "免費" : "$" + p.Price)</strong>
+                    </div>
+                }
+            </section>
+        }
+    </div>
+
+    <div class="col-lg-5 order-first order-lg-0">
+        <section class="mb-3" aria-labelledby="couponTitle">
+            <h2 id="couponTitle" class="h5 fw-bold">優惠</h2>
+            @if (s.StampGoal > 0)
+            {
+                <div class="panel mb-3 d-flex align-items-center gap-3">
+                    @Ui.Ic("star", "ic fs-2 text-warning")
+                    <div>
+                        <p class="fw-bold mb-0">集點卡：集滿 @s.StampGoal 點換「@s.StampReward」</p>
+                        <p class="small text-ink-2 mb-0">結帳時出示 @if (Request.IsAuthenticated) {<a href="@Url.Action("Index", "MemberCard")">會員卡</a>} else {<text>會員卡</text>} 給店員掃就能集點</p>
+                    </div>
+                </div>
+            }
+            @if (!Model.Coupons.Any())
+            {
+                <div class="panel">
+                    @if (isOsm)
+                    {
+                        <p class="mb-2">這間店還沒加入平台，目前沒有優惠。</p>
+                        <p class="small text-ink-2 mb-0">你是老闆嗎？@Html.ActionLink("註冊店家帳號", "Register", "Account") 後申請上架，就能發優惠券，平台零抽成。</p>
+                    }
+                    else
+                    {
+                        <p class="mb-0">目前沒有進行中的優惠。</p>
+                    }
+                </div>
+            }
+            @foreach (var c in Model.Coupons)
+            {
+                <div class="mb-3">@Html.Partial("_CouponCard", c, new ViewDataDictionary { { "claimed", Model.ClaimedCouponIds.Contains(c.Id) } })</div>
+            }
+        </section>
+
+        <section aria-labelledby="reviewTitle">
+            <h2 id="reviewTitle" class="h5 fw-bold">評論</h2>
+            @if (Model.CanReview)
+            {
+                using (Html.BeginForm("AddReview", "Stores", new { id = s.Id }, FormMethod.Post, new { @class = "panel mb-3" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <fieldset>
+                        <legend class="h6 fw-bold">給這間店評分</legend>
+                        <div class="d-flex flex-wrap gap-3 mb-2">
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="rating" id="r@(i)" value="@i" @(i == 5 ? "checked" : "") />
+                                    <label class="form-check-label" for="r@(i)">@i 顆星</label>
+                                </div>
+                            }
+                        </div>
+                    </fieldset>
+                    <label for="comment" class="form-label">想說的話（可不填）</label>
+                    <textarea id="comment" name="comment" maxlength="300" rows="2" class="form-control mb-2"></textarea>
+                    <button type="submit" class="btn btn-brand">送出評論</button>
+                }
+            }
+            else if (!Request.IsAuthenticated)
+            {
+                <p class="panel">@Html.ActionLink("登入", "Login", "Account", new { returnUrl = Request.RawUrl }, null) 後可以評論與領券。</p>
+            }
+            @if (!Model.Reviews.Any())
+            {
+                <p class="text-ink-2">還沒有評論。</p>
+            }
+            @foreach (var r in Model.Reviews)
+            {
+                <div class="panel mb-2">
+                    <p class="mb-1"><strong>@r.User.DisplayName</strong>・<span aria-label="@r.Rating 顆星">@(new string('★', r.Rating))</span>・<small class="text-ink-2">@r.CreatedAt.ToString("yyyy-MM-dd")</small></p>
+                    @if (!string.IsNullOrEmpty(r.Comment))
+                    {
+                        <p class="mb-0">@r.Comment</p>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+</div>
+
+@* ===== 連續逛店：滑到底就看到下一家 ===== *@
+@if (Model.NextStore != null)
+{
+    var nx = Model.NextStore.Store;
+    <section class="next-store mt-4" aria-labelledby="nextTitle">
+        <h2 id="nextTitle" class="h5 fw-bold">下一家</h2>
+        <a class="next-card" href="@Url.Action("Details", new { id = nx.Id })" id="nextLink" rel="next">
+            <span class="next-img" style="background:@Ui.Tint(nx.Category)">
+                @if (!string.IsNullOrEmpty(nx.PhotoUrl))
+                {
+                    <img src="@Url.Content(nx.PhotoUrl)" alt="" loading="lazy" />
+                }
+                else
+                {
+                    @Ui.Art(nx)
+                }
+            </span>
+            <span class="next-body">
+                <strong>@nx.Name</strong>
+                <span class="next-meta">@Ui.Ic("walk") 從這裡走 @Geo.WalkMinutes(Model.NextStore.DistanceMeters.Value) 分・@nx.Category.Name</span>
+                @if (Model.NextStore.ActiveCoupons > 0)
+                {
+                    <span class="chip chip-brand">@Model.NextStore.ActiveCoupons 張優惠</span>
+                }
+                @if (!string.IsNullOrEmpty(nx.OwnerMessage))
+                {
+                    <span class="next-say">「@nx.OwnerMessage」</span>
+                }
+            </span>
+            <span class="next-go" aria-hidden="true">›</span>
+        </a>
+    </section>
+}
+@if (Model.Nearby != null && Model.Nearby.Any())
+{
+    <div class="section-head">
+        <h2>附近還有</h2>
+        <span class="small text-ink-2">離這間店最近</span>
+    </div>
+    <div class="row g-2">
+        @foreach (var item in Model.Nearby)
+        {
+            <div class="col-12 col-md-6 col-xl-4">@Html.Partial("_StoreRow", item)</div>
+        }
+    </div>
+}
+
+@* 固定在底部的上一家／下一家（手機在分頁列上方） *@
+@if (Model.PrevStore != null || Model.NextStore != null)
+{
+    <nav class="store-pager" aria-label="切換店家">
+        @if (Model.PrevStore != null)
+        {
+            <a class="sp-prev" href="@Url.Action("Details", new { id = Model.PrevStore.Id })" id="prevLink" rel="prev">
+                <span aria-hidden="true">‹</span>
+                <span class="sp-text"><small>上一家</small><span class="sp-name">@Model.PrevStore.Name</span></span>
+            </a>
+        }
+        else
+        {
+            <span class="sp-prev sp-empty" aria-hidden="true"></span>
+        }
+        @if (Model.NextStore != null)
+        {
+            <a class="sp-next" href="@Url.Action("Details", new { id = Model.NextStore.Store.Id })" rel="next">
+                <span class="sp-text"><small>下一家</small><span class="sp-name">@Model.NextStore.Store.Name</span></span>
+                <span aria-hidden="true">›</span>
+            </a>
+        }
+    </nav>
+    <p class="swipe-hint" id="swipeHint" hidden>@Ui.Ic("compass") 左右滑動可以切換店家</p>
+}
+
+@section scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script>
+        (function () {
+            var pos = [@s.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture), @s.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)];
+            var m = L.map('miniMap', { zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, touchZoom: false, keyboard: false, attributionControl: true })
+                .setView([pos[0] + 0.0004, pos[1]], 17);
+            m.attributionControl.setPosition('topright');
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(m);
+            L.marker(pos, {
+                icon: L.divIcon({ className: '', iconSize: [44, 44], iconAnchor: [22, 44],
+                    html: '<div style="width:44px;height:44px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#C2410C;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 48 48" width="28" height="28" style="transform:rotate(45deg)" aria-hidden="true" focusable="false"><use href="#a-@Ui.ArtName(s)"></use></svg></div>' }),
+                keyboard: false, interactive: false
+            }).addTo(m);
+        })();
+        // 左右滑動切換店家：往左滑＝下一家，往右滑＝上一家（在地圖、橫向列表、輸入框上滑動不算）
+        (function () {
+            var next = document.getElementById('nextLink'), prev = document.getElementById('prevLink');
+            if (!next && !prev) return;
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var sx = 0, sy = 0, st = 0, ok = false;
+            document.addEventListener('touchstart', function (e) {
+                var t = e.target;
+                ok = e.touches.length === 1 && !(t.closest && t.closest('.leaflet-container, .h-scroll, input, textarea, select, .store-pager'));
+                if (!ok) return;
+                sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
+            }, { passive: true });
+            document.addEventListener('touchend', function (e) {
+                if (!ok) return;
+                var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+                if (Math.abs(dx) < 80 || Math.abs(dy) > Math.abs(dx) * 0.6 || Date.now() - st > 800) return;
+                var target = dx < 0 ? next : prev;
+                if (!target) return;
+                if (!reduce) document.body.classList.add(dx < 0 ? 'swipe-out-left' : 'swipe-out-right');
+                setTimeout(function () { window.location.href = target.href; }, reduce ? 0 : 180);
+            }, { passive: true });
+            // 第一次在手機上看店家頁時提示一次
+            try {
+                if (('ontouchstart' in window) && !localStorage.getItem('swipeHintShown')) {
+                    var h = document.getElementById('swipeHint');
+                    if (h) { h.hidden = false; setTimeout(function () { h.hidden = true; }, 3500); }
+                    localStorage.setItem('swipeHintShown', '1');
+                }
+            } catch (err) { }
+        })();
+        document.getElementById('shareStore').addEventListener('click', function () {
+            var b = this, data = { title: b.dataset.title, text: '這間店不錯，一起去：' + b.dataset.title, url: b.dataset.url };
+            if (navigator.share) { navigator.share(data).catch(function () { }); return; }
+            (navigator.clipboard ? navigator.clipboard.writeText(data.text + ' ' + data.url) : Promise.reject()).then(function () { b.textContent = '已複製連結'; })
+                .catch(function () { prompt('複製連結傳給朋友：', data.url); });
+        });
+    </script>
+}

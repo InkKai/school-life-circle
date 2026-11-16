@@ -1,0 +1,37 @@
+﻿@{
+    ViewBag.Title = "關於平台";
+}
+
+<section class="about-hero mb-3">
+    <img class="about-mascot" src="@Url.Content("~/Content/img/mascot-wave.svg")" alt="" />
+    <div>
+        <h1 class="h3 fw-bold mb-2">關於學區生活圈</h1>
+        <p class="mb-0">把臺中科大、臺中一中、臺體大周邊的店家和優惠放在一起，學生和長輩都能用手機找店、領券、集點。</p>
+    </div>
+</section>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4"><div class="panel value-card"><span class="v-ico">@Ui.Ic("coin")</span><h2 class="h6 fw-bold">零抽成</h2><p class="mb-0 text-ink-2">平台只負責把人帶到店裡，不經手店家的錢。</p></div></div>
+    <div class="col-md-4"><div class="panel value-card"><span class="v-ico">@Ui.Ic("users")</span><h2 class="h6 fw-bold">不分年齡</h2><p class="mb-0 text-ink-2">大字模式、互動導覽，還能把優惠券傳給家人。</p></div></div>
+    <div class="col-md-4"><div class="panel value-card"><span class="v-ico">@Ui.Ic("wheel")</span><h2 class="h6 fw-bold">無障礙資訊</h2><p class="mb-0 text-ink-2">店家頁標示入口階梯、斜坡道與無障礙廁所。</p></div></div>
+</div>
+
+<section class="panel mb-3" aria-labelledby="dataTitle">
+    <h2 id="dataTitle" class="h6 fw-bold">資料從哪裡來</h2>
+    <ul class="mb-0">
+        <li>真實店家名錄來自 <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap<span class="visually-hidden">（另開視窗）</span></a>，只列店名和位置，不掛優惠。</li>
+        <li>標示「示範」的店家、優惠、評論和照片都是虛構或示意，用來展示功能。</li>
+        <li>吉祥物「小圈」和圖示是團隊自己畫的。</li>
+    </ul>
+</section>
+
+<section class="panel mb-3" aria-labelledby="techTitle">
+    <h2 id="techTitle" class="h6 fw-bold">技術</h2>
+    <p class="mb-0">ASP.NET MVC 5、Entity Framework 6、Bootstrap 5、Leaflet 與 OpenStreetMap，部署於 Microsoft Azure。本網站為國立臺中科技大學「動態網頁程式設計」課程專題。</p>
+</section>
+
+<div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-brand" href="@Url.Action("Partner")">店家合作</a>
+    <a class="btn btn-soft" href="@Url.Action("Tutorial")">使用教學</a>
+    <a class="btn btn-soft" href="@Url.Action("Index", "Campaigns")">活動</a>
+</div>

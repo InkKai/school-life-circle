@@ -1,0 +1,36 @@
+﻿@model UserCoupon
+@{
+    var used = Model.Status == CouponStatus.Used;
+    var expired = !used && Model.Coupon.EndDate < DateTime.Today;
+}
+<div class="card card-tint text-center">
+    <div class="card-body">
+        <p class="mb-1">@Model.Coupon.Store.Name</p>
+        <h1 class="h2">@Model.Coupon.Title</h1>
+        @if (used)
+        {
+            <div class="alert alert-secondary my-3" role="status">這張優惠券已在 @Model.UsedAt.Value.ToString("yyyy-MM-dd HH:mm") 使用過。</div>
+        }
+        else if (expired)
+        {
+            <div class="alert alert-secondary my-3" role="status">這張優惠券已過期（@Model.Coupon.EndDate.ToString("yyyy-MM-dd")）。</div>
+        }
+        else
+        {
+            <div class="qr-box my-3"><div id="qrcode" role="img" aria-label="優惠券 QR Code，核銷碼 @Model.Code"></div></div>
+            <p class="mb-1">核銷碼（掃不到時給店員看）</p>
+            <p class="code-text mb-2">@Model.Code</p>
+            <p class="fs-5 fw-bold">請把畫面拿給店員掃描</p>
+            <p class="small mb-0">使用期限：@Model.Coupon.EndDate.ToString("yyyy-MM-dd")｜每張限用一次</p>
+        }
+    </div>
+</div>
+@if (!used && !expired)
+{
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        new QRCode(document.getElementById('qrcode'), { text: '@Model.Code', width: 240, height: 240 });
+        // 外層已有說明文字，內部圖片設為裝飾
+        document.querySelectorAll('#qrcode img, #qrcode canvas').forEach(function (el) { el.setAttribute('alt', ''); el.setAttribute('aria-hidden', 'true'); });
+    </script>
+}

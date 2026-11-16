@@ -1,0 +1,93 @@
+﻿@model List<Friendship>
+@{
+    ViewBag.Title = "好友";
+    var me = (User)ViewBag.Me;
+    var received = (List<UserCoupon>)ViewBag.Received;
+    var inviteUrl = (string)ViewBag.InviteUrl;
+    int referrals = ViewBag.ReferralCount;
+}
+
+<h1 class="h4 fw-bold mb-3">好友</h1>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <section class="panel mb-3" aria-labelledby="addTitle">
+            <h2 id="addTitle" class="h6 fw-bold">加好友</h2>
+            @using (Html.BeginForm("Add", "Friends", FormMethod.Post, new { @class = "d-flex gap-2" }))
+            {
+                @Html.AntiForgeryToken()
+                <label for="code" class="visually-hidden">好友的 10 位數會員編號</label>
+                <input id="code" name="code" class="form-control" inputmode="numeric" placeholder="輸入好友的會員編號" autocomplete="off" required />
+                <button type="submit" class="btn btn-brand text-nowrap">@Ui.Ic("plus") 加入</button>
+            }
+            <p class="small text-ink-2 mt-2 mb-0">我的編號：<strong class="code-text fs-6">@me.MemberCode</strong></p>
+        </section>
+
+        <section class="panel mb-3 d-flex align-items-center gap-3" aria-labelledby="inviteTitle">
+            <img src="@Url.Content("~/Content/img/mascot-happy.svg")" alt="" width="64" height="67" />
+            <div class="flex-grow-1">
+                <h2 id="inviteTitle" class="h6 fw-bold mb-1">邀請朋友一起用</h2>
+                <button type="button" class="btn btn-soft btn-sm" id="inviteBtn"
+                        data-title="學區生活圈" data-text="我在用學區生活圈領三校周邊的優惠。用我的連結註冊，我們會直接變成好友！" data-url="@inviteUrl">@Ui.Ic("share") 從通訊錄或 LINE 分享</button>
+                <span class="small text-ink-2 d-none" id="inviteDone" role="status">已複製邀請文字</span>
+                @if (referrals > 0)
+                {
+                    <p class="small text-ink-2 mt-1 mb-0">已經邀請 <strong>@referrals</strong> 位朋友加入</p>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-7">
+        <section aria-labelledby="listTitle" class="mb-4">
+            <h2 id="listTitle" class="h6 fw-bold">我的好友（@Model.Count）</h2>
+            @if (!Model.Any())
+            {
+                <div class="empty-state"><img class="mascot" src="@Url.Content("~/Content/img/mascot-sleep.svg")" alt="" /><p>還沒有好友，輸入對方的會員編號加入吧</p></div>
+            }
+            <div class="d-grid gap-2">
+                @foreach (var f in Model)
+                {
+                    <div class="friend-row">
+                        <span class="avatar sm" aria-hidden="true">@f.Friend.DisplayName.Substring(0, 1)</span>
+                        <div class="flex-grow-1"><span class="name">@f.Friend.DisplayName</span><br /><small class="text-ink-2">@f.CreatedAt.ToString("yyyy-MM-dd") 成為好友</small></div>
+                        @using (Html.BeginForm("Remove", "Friends", new { id = f.FriendId }, FormMethod.Post, new { @class = "m-0" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-secondary" onclick="return confirm('確定要刪除好友？')">刪除<span class="visually-hidden">好友 @f.Friend.DisplayName</span></button>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+
+        @if (received.Any())
+        {
+            <section aria-labelledby="giftTitle">
+                <h2 id="giftTitle" class="h6 fw-bold">好友送我的券</h2>
+                <div class="d-grid gap-2">
+                    @foreach (var g in received)
+                    {
+                        <a class="friend-row text-decoration-none text-body" href="@Url.Action("Show", "MyCoupons", new { id = g.Id })">
+                            @Ui.Ic("gift", "ic fs-4 text-warning")
+                            <span class="flex-grow-1"><span class="name">@g.Coupon.Title</span><br /><small class="text-ink-2">@g.GiftedFrom.DisplayName 送的・@g.Coupon.Store.Name</small></span>
+                        </a>
+                    }
+                </div>
+            </section>
+        }
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        document.getElementById('inviteBtn').addEventListener('click', function () {
+            var b = this, data = { title: b.dataset.title, text: b.dataset.text, url: b.dataset.url };
+            if (navigator.share) { navigator.share(data).catch(function () { }); return; }
+            var t = data.text + ' ' + data.url;
+            (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
+                document.getElementById('inviteDone').classList.remove('d-none');
+            }).catch(function () { prompt('複製這段文字傳給朋友：', t); });
+        });
+    </script>
+}

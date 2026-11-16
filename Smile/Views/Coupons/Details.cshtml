@@ -1,0 +1,86 @@
+﻿@model Coupon
+@{
+    ViewBag.Title = Model.Title;
+    ViewBag.Description = Model.Store.Name + "：" + Model.Title;
+    ViewBag.OgImage = Model.Store.PhotoUrl;
+    bool claimed = ViewBag.Claimed;
+    var today = DateTime.Today;
+    var claimable = Model.IsClaimable(today);
+    var daysLeft = (Model.EndDate.Date - today).Days;
+    var s = Model.Store;
+    var camp = Model.Campaign != null && Model.Campaign.IsRunning(today) ? Model.Campaign : null;
+}
+
+<p class="mb-2"><a href="@Url.Action("Index")">← 優惠列表</a></p>
+<div class="row g-3">
+    <div class="col-lg-7">
+        <article class="ticket">
+            <div class="ticket-top" style="background:@Ui.Gradient(Model.Id)">
+                @if (camp != null)
+                {
+                    <a class="camp-chip" href="@Url.Action("Details", "Campaigns", new { id = camp.Id })">@camp.Title</a>
+                }
+                <p class="ticket-big" aria-hidden="true">@Ui.CouponHeadline(Model.Title)</p>
+                <h1 class="ticket-title">@Model.Title</h1>
+                @if (!string.IsNullOrEmpty(s.PhotoUrl))
+                {
+                    <img class="deal-photo" src="@Url.Content(s.PhotoUrl)" alt="" />
+                }
+                else
+                {
+                    <span class="deal-art">@Ui.Art(s)</span>
+                }
+            </div>
+            <div class="ticket-body">
+                <a class="ticket-store" href="@Url.Action("Details", "Stores", new { id = s.Id })">
+                    <span class="thumb" style="background:@Ui.Tint(s.Category)">@Ui.Art(s)</span>
+                    <span class="flex-grow-1 min-w-0"><strong>@s.Name</strong><br /><small class="text-ink-2">@s.Category.Name・@s.Address</small></span>
+                    <span aria-hidden="true">→</span>
+                </a>
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="mt-3 mb-0">@Model.Description</p>
+                }
+                <ul class="quick-info">
+                    <li>@Ui.Ic("clock")<span>到 @Model.EndDate.ToString("yyyy-MM-dd")@(daysLeft >= 0 && daysLeft <= 3 ? "（剩 " + daysLeft + " 天）" : "")</span></li>
+                    <li>@Ui.Ic("ticket")<span>剩 @Model.Remaining 張@(Model.IssuedCount > 0 ? "・已有 " + Model.IssuedCount + " 人領取" : "")</span></li>
+                    <li>@Ui.Ic("card")<span>@(s.PaymentMethods ?? "付款方式請洽店家")</span></li>
+                </ul>
+                <div class="d-grid gap-2 mt-3">
+                    @if (claimed)
+                    {
+                        <a class="btn btn-outline-brand btn-lg" href="@Url.Action("Index", "MyCoupons")">已領取，去我的優惠券</a>
+                    }
+                    else if (!claimable)
+                    {
+                        <button type="button" class="btn btn-secondary btn-lg" disabled>已領完或不在活動期間</button>
+                    }
+                    else if (!Request.IsAuthenticated)
+                    {
+                        <a class="btn btn-brand btn-lg" href="@Url.Action("Login", "Account", new { returnUrl = Request.RawUrl })">登入後領取</a>
+                    }
+                    else
+                    {
+                        using (Html.BeginForm("Claim", "Coupons", new { id = Model.Id }, FormMethod.Post, new { @class = "d-grid" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-brand btn-lg">@Ui.Ic("ticket") 領取優惠券</button>
+                        }
+                    }
+                    <button type="button" class="btn btn-soft" data-share-url="@Request.Url.GetLeftPart(UriPartial.Path)" data-share-title="@Model.Title" data-share-text="@s.Name 有優惠：@Model.Title">@Ui.Ic("share") <span class="share-label">分享給朋友</span></button>
+                </div>
+            </div>
+        </article>
+    </div>
+    <div class="col-lg-5">
+        <section class="panel" aria-labelledby="howTitle">
+            <h2 id="howTitle" class="h6 fw-bold">怎麼用？</h2>
+            <ol class="how-steps">
+                <li>@Ui.Ic("ticket")領取</li>
+                <li>@Ui.Ic("qr")到店出示</li>
+                <li>@Ui.Ic("check")店員掃碼</li>
+            </ol>
+            <p class="small text-ink-2 mb-0">付款照平常方式在店內付，平台不經手金流。</p>
+        </section>
+    </div>
+</div>

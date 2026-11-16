@@ -1,0 +1,91 @@
+﻿@model RegisterViewModel
+@{
+    var schoolList = (SelectList)ViewBag.Schools;
+    ViewBag.Title = "加入學區生活圈";
+    var inviter = (string)ViewBag.InviterName;
+    var teasers = (List<Coupon>)ViewBag.Teasers ?? new List<Coupon>();
+}
+
+<div class="row g-4 align-items-stretch welcome">
+    <div class="col-lg-6">
+        <section class="welcome-art" aria-labelledby="welcomeTitle">
+            <img class="mascot" src="@Url.Content("~/Content/img/mascot-wave.svg")" alt="" />
+            <p class="mb-2 fw-bold">嗨，我是小圈！</p>
+            <h1 id="welcomeTitle" class="big mb-3">開手機，<br />找優惠。</h1>
+            <p class="fs-5 mb-3">三校周邊 1,400+ 間店</p>
+            <ul class="welcome-chips">
+                <li>@Ui.Ic("ticket")領券</li>
+                <li>@Ui.Ic("star")集點</li>
+                <li>@Ui.Ic("users")好友</li>
+                <li>@Ui.Ic("wheel")無障礙</li>
+            </ul>
+            @if (teasers.Any())
+            {
+                <p class="fw-bold mt-4 mb-2">註冊就能領</p>
+                <ul class="teaser-list">
+                    @foreach (var t in teasers)
+                    {
+                        <li><strong>@Ui.CouponHeadline(t.Title)</strong><span>@t.Title<br /><small>@t.Store.Name</small></span></li>
+                    }
+                </ul>
+            }
+        </section>
+    </div>
+    <div class="col-lg-6">
+        <div class="panel h-100 p-4">
+            <h2 class="h3 fw-bold mb-3">免費註冊</h2>
+            @if (inviter != null)
+            {
+                <div class="invite-strip" role="note">
+                    <img src="@Url.Content("~/Content/img/mascot-happy.svg")" alt="" width="44" height="46" />
+                    <span><strong>@inviter</strong> 邀請你加入，註冊後你們會直接成為好友</span>
+                </div>
+            }
+            @using (Html.BeginForm("Register", "Account", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.Ref)
+                @Html.ValidationSummary(true, "", new { @class = "alert alert-danger", role = "alert" })
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Email, new { @class = "form-label fw-semibold" })
+                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control form-control-lg", type = "email", autocomplete = "email" })
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.DisplayName, new { @class = "form-label fw-semibold" })
+                    @Html.TextBoxFor(m => m.DisplayName, new { @class = "form-control form-control-lg", autocomplete = "nickname" })
+                    @Html.ValidationMessageFor(m => m.DisplayName, "", new { @class = "text-danger" })
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-6">
+                        @Html.LabelFor(m => m.Password, new { @class = "form-label fw-semibold" })
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control form-control-lg", autocomplete = "new-password", aria_describedby = "pwHelp" })
+                        <div id="pwHelp" class="form-text">至少 8 個字元</div>
+                        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="col-sm-6">
+                        @Html.LabelFor(m => m.ConfirmPassword, new { @class = "form-label fw-semibold" })
+                        @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control form-control-lg", autocomplete = "new-password" })
+                        @Html.ValidationMessageFor(m => m.ConfirmPassword, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.SchoolId, new { @class = "form-label fw-semibold" })
+                    @Html.DropDownListFor(m => m.SchoolId, schoolList, "不選擇", new { @class = "form-select form-select-lg" })
+                </div>
+                <div class="form-check mb-4">
+                    @Html.CheckBoxFor(m => m.IsMerchant, new { @class = "form-check-input", aria_describedby = "merchantHelp" })
+                    @Html.LabelFor(m => m.IsMerchant, new { @class = "form-check-label" })
+                    <div id="merchantHelp" class="form-text">需平台審核才會上架・<a href="@Url.Action("Partner", "Home")">看店家方案</a></div>
+                </div>
+                <button type="submit" class="btn btn-brand btn-lg w-100">註冊並開始使用</button>
+            }
+            <div class="d-flex flex-wrap justify-content-between gap-2 mt-3">
+                <span>已經有帳號？@Html.ActionLink("登入", "Login")</span>
+                <a href="@Url.Action("Browse", "Home")">先不註冊，逛逛看 →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts { @Scripts.Render("~/bundles/jqueryval") }

@@ -1,0 +1,44 @@
+﻿@model List<Coupon>
+@{
+    ViewBag.Title = "優惠管理";
+    var store = (Store)ViewBag.Store;
+    var today = DateTime.Today;
+}
+
+<h1 class="mb-3">@store.Name</h1>
+@Html.Partial("_MerchantNav", store)
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">優惠（@Model.Count）</h2>
+    @Html.ActionLink("＋ 新增優惠", "CreateCoupon", new { storeId = store.Id }, new { @class = "btn btn-smile" })
+</div>
+
+@if (!Model.Any())
+{
+    <p>還沒有優惠，按「新增優惠」開始建立。</p>
+}
+else
+{
+    <table class="table bg-white align-middle">
+        <thead><tr><th scope="col">優惠</th><th scope="col">期間</th><th scope="col">已領／總數</th><th scope="col">狀態</th><th scope="col"><span class="visually-hidden">操作</span></th></tr></thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                var state = !c.IsActive ? "已下架" : c.EndDate < today ? "已結束" : c.StartDate > today ? "尚未開始" : "進行中";
+                <tr>
+                    <td>@c.Title</td>
+                    <td class="text-nowrap">@c.StartDate.ToString("MM-dd") ～ @c.EndDate.ToString("MM-dd")</td>
+                    <td>@c.IssuedCount / @c.TotalQuantity</td>
+                    <td>@state</td>
+                    <td class="text-end text-nowrap">
+                        @Html.ActionLink("修改", "EditCoupon", new { id = c.Id }, new { @class = "btn btn-sm btn-outline-smile" })
+                        @using (Html.BeginForm("DeleteCoupon", "Merchant", new { id = c.Id }, FormMethod.Post, new { @class = "d-inline", onsubmit = "return confirm('確定刪除？已有人領取的優惠會改為下架。');" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger">刪除</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

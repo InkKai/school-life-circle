@@ -1,0 +1,67 @@
+﻿@model Coupon
+@{
+    var store = (Store)ViewBag.Store;
+    ViewBag.Title = Model.Id == 0 ? "新增優惠" : "修改優惠";
+}
+
+<h1 class="mb-3">@store.Name</h1>
+@Html.Partial("_MerchantNav", store)
+<h2 class="h4">@ViewBag.Title</h2>
+@using (Html.BeginForm("SaveCoupon", "Merchant", FormMethod.Post, new { @class = "card card-body" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.StoreId)
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Title, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.Title, new { @class = "form-control", placeholder = "例如：便當折 10 元" })
+        @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger" })
+    </div>
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Description, new { @class = "form-label" })
+        @Html.TextAreaFor(m => m.Description, 3, 40, new { @class = "form-control" })
+    </div>
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            @Html.LabelFor(m => m.StartDate, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.StartDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+            @Html.ValidationMessageFor(m => m.StartDate, "", new { @class = "text-danger" })
+        </div>
+        <div class="col-md-4">
+            @Html.LabelFor(m => m.EndDate, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.EndDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+            @Html.ValidationMessageFor(m => m.EndDate, "", new { @class = "text-danger" })
+        </div>
+        <div class="col-md-4">
+            @Html.LabelFor(m => m.TotalQuantity, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.TotalQuantity, new { @class = "form-control", type = "number", min = "1" })
+            @Html.ValidationMessageFor(m => m.TotalQuantity, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    var campaigns = (List<Campaign>)ViewBag.Campaigns ?? new List<Campaign>();
+    if (campaigns.Any())
+    {
+        <div class="mb-3">
+            <label for="CampaignId" class="form-label">參加活動（可不選）</label>
+            <select id="CampaignId" name="CampaignId" class="form-select" aria-describedby="campHelp">
+                <option value="">不參加</option>
+                @foreach (var cp in campaigns)
+                {
+                    <option value="@cp.Id" @(Model.CampaignId == cp.Id ? "selected" : "")>@cp.Title（@cp.StartDate.ToString("M/d")–@cp.EndDate.ToString("M/d")）</option>
+                }
+            </select>
+            <div id="campHelp" class="form-text">參加後，這張券會出現在活動頁和首頁的活動專區，多一個被看見的機會。</div>
+        </div>
+    }
+    <div class="form-check mb-3">
+        @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input" })
+        @Html.LabelFor(m => m.IsActive, new { @class = "form-check-label" })
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-smile btn-lg">儲存</button>
+        @Html.ActionLink("取消", "Coupons", new { storeId = store.Id }, new { @class = "btn btn-outline-secondary btn-lg" })
+    </div>
+}
+
+@section scripts { @Scripts.Render("~/bundles/jqueryval") }

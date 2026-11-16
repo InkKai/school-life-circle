@@ -1,0 +1,42 @@
+﻿@model Store
+@{
+    ViewBag.Title = "店頭立牌";
+    var url = (string)ViewBag.StoreUrl;
+    int couponCount = ViewBag.CouponCount;
+}
+
+<div class="no-print">
+    <h1 class="mb-3">@Model.Name</h1>
+    @Html.Partial("_MerchantNav", Model)
+    <div class="panel mb-3 d-flex flex-wrap align-items-center gap-3">
+        @Ui.Ic("print", "ic fs-3")
+        <div class="flex-grow-1"><strong>印出來貼在門口或櫃檯</strong><br /><span class="small text-ink-2">客人用手機掃 QR Code，就會打開你的店家頁，可以直接領券、收藏。</span></div>
+        <button type="button" class="btn btn-brand" onclick="window.print()">@Ui.Ic("print") 列印</button>
+    </div>
+</div>
+
+<article class="poster" aria-label="店頭立牌預覽">
+    <div class="poster-head">
+        <img src="@Url.Content("~/Content/img/mascot-happy.svg")" alt="" width="96" height="100" />
+        <div>
+            <p class="poster-brand">學區生活圈</p>
+            <p class="poster-store">@Model.Name</p>
+        </div>
+    </div>
+    <p class="poster-big">@(couponCount > 0 ? "掃我領優惠" : "掃我看店家")</p>
+    <div class="poster-qr"><div id="posterQr" role="img" aria-label="店家頁 QR Code：@url"></div></div>
+    <ul class="poster-points">
+        <li>@Ui.Ic("ticket")領券到店用</li>
+        <li>@Ui.Ic("star")集點換好禮</li>
+        <li>@Ui.Ic("users")送券給好友</li>
+    </ul>
+    <p class="poster-foot">零抽成・付款照平常在店內完成</p>
+</article>
+
+@section scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        new QRCode(document.getElementById('posterQr'), { text: '@url', width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
+        document.querySelectorAll('#posterQr img, #posterQr canvas').forEach(function (el) { el.setAttribute('alt', ''); el.setAttribute('aria-hidden', 'true'); });
+    </script>
+}

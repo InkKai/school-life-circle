@@ -1,0 +1,120 @@
+﻿@{
+    ViewBag.Title = "店家合作";
+    ViewBag.Description = "零抽成、不經手金流。用手機就能發優惠券、掃碼核銷、經營集點卡。";
+    int storeCount = ViewBag.StoreCount;
+    var joinUrl = Url.Action("Register", "Account", new { merchant = true });
+}
+
+<section class="partner-hero mb-3">
+    <div class="partner-hero-text">
+        <p class="deal-tag mb-0">給三校周邊的店家</p>
+        <h1>零抽成，<br />讓附近的學生走進你的店</h1>
+        <p class="lead-text">發優惠券、掃碼核銷、集點卡，一支手機就能做。平台不經手你的錢。</p>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-light btn-lg fw-bold" href="@joinUrl">免費上架</a>
+            <a class="btn btn-outline-light btn-lg" href="#plans">看方案</a>
+        </div>
+    </div>
+    <img class="partner-mascot" src="@Url.Content("~/Content/img/mascot-happy.svg")" alt="" />
+</section>
+
+<div class="fact-row mb-4">
+    <div class="fact"><strong>0%</strong><span>抽成</span></div>
+    <div class="fact"><strong>@storeCount</strong><span>間周邊店家名錄</span></div>
+    <div class="fact"><strong>3 分鐘</strong><span>完成申請</span></div>
+</div>
+
+<h2 class="h5 fw-bold">為什麼用學區生活圈</h2>
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="panel value-card">
+            <span class="v-ico">@Ui.Ic("coin")</span>
+            <h3 class="h6 fw-bold">零抽成，不經手金流</h3>
+            <p class="mb-0 text-ink-2">客人在店裡照平常的方式付款，營收全部是你的。</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel value-card">
+            <span class="v-ico">@Ui.Ic("receipt")</span>
+            <h3 class="h6 fw-bold">手機就是 POS</h3>
+            <p class="mb-0 text-ink-2">掃客人的 QR Code 就能核銷優惠券、蓋集點章，不用另外買設備。</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel value-card">
+            <span class="v-ico">@Ui.Ic("mega")</span>
+            <h3 class="h6 fw-bold">幫你被看見</h3>
+            <p class="mb-0 text-ink-2">店頭立牌 QR Code、考試週等活動檔期、首頁精選，把路過的人變成熟客。</p>
+        </div>
+    </div>
+</div>
+
+<h2 class="h5 fw-bold">三步驟上架</h2>
+<ol class="steps-row mb-4">
+    <li><span class="step-num" aria-hidden="true">1</span><div><strong>註冊店家帳號</strong><br /><span class="text-ink-2">只要電子郵件和密碼。</span></div></li>
+    <li><span class="step-num" aria-hidden="true">2</span><div><strong>填店家資料</strong><br /><span class="text-ink-2">送出後由平台審核，通過就上架。</span></div></li>
+    <li><span class="step-num" aria-hidden="true">3</span><div><strong>發券、印立牌</strong><br /><span class="text-ink-2">把立牌貼在門口，客人掃了就能領。</span></div></li>
+</ol>
+
+<h2 id="plans" class="h5 fw-bold">方案</h2>
+<div class="row g-3 mb-2">
+    <div class="col-md-6">
+        <div class="plan-card">
+            <h3 class="h5 fw-bold mb-1">免費版</h3>
+            <p class="plan-price mb-0">NT$0 <small>永久免費</small></p>
+            <ul class="plan-list">
+                <li>@Ui.Ic("check")<span>店家頁面、照片、老闆的話</span></li>
+                <li>@Ui.Ic("check")<span>優惠券不限張數</span></li>
+                <li>@Ui.Ic("check")<span>掃碼核銷與 POS 收銀模式</span></li>
+                <li>@Ui.Ic("check")<span>集點卡</span></li>
+                <li>@Ui.Ic("check")<span>店頭立牌 QR Code</span></li>
+                <li>@Ui.Ic("check")<span>參加平台活動檔期</span></li>
+            </ul>
+            <a class="btn btn-brand w-100 mt-3" href="@joinUrl">免費上架</a>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="plan-card plus">
+            <h3 class="h5 fw-bold mb-1">加值版 <span class="chip chip-soft">規劃中</span></h3>
+            <p class="plan-price mb-0">NT$299 <small>／月（試算價）</small></p>
+            <ul class="plan-list">
+                <li>@Ui.Ic("check")<span>免費版的全部功能</span></li>
+                <li>@Ui.Ic("check")<span>首頁「精選店家」曝光</span></li>
+                <li>@Ui.Ic("check")<span>活動檔期的主打位置</span></li>
+                <li>@Ui.Ic("check")<span>進階報表：時段、回客率</span></li>
+            </ul>
+            <p class="small text-ink-2 mt-3 mb-0">月費制，不從你的營業額抽成。</p>
+        </div>
+    </div>
+</div>
+<p class="small text-ink-2 mb-4">目前是課程專題，所有功能免費開放；加值版還沒開始收費，價格只是試算。</p>
+
+<h2 class="h5 fw-bold">常見問題</h2>
+<div class="faq mb-4">
+    <details>
+        <summary>真的不收費嗎？</summary>
+        <p>基本功能永久免費，也不抽成。未來的加值版是月費制，一樣不會從你的營業額抽成。</p>
+    </details>
+    <details>
+        <summary>平台會經手我的錢嗎？</summary>
+        <p>不會。客人在店裡付款，平台只負責優惠券和集點，發票也照你原本的方式開。</p>
+    </details>
+    <details>
+        <summary>沒有電腦可以用嗎？</summary>
+        <p>可以，全部功能都能用手機操作，包含掃碼核銷和集點。</p>
+    </details>
+    <details>
+        <summary>優惠券怎麼核銷？</summary>
+        <p>客人出示 QR Code，你用手機相機掃一下，或輸入核銷碼。每張券只能用一次，重複使用會被擋下來。</p>
+    </details>
+    <details>
+        <summary>我的店已經在名錄上了？</summary>
+        <p>名錄資料來自 OpenStreetMap 的公開資料。註冊後申請上架，就能管理自己的店家頁面並發券。</p>
+    </details>
+</div>
+
+<div class="panel d-flex flex-wrap align-items-center gap-3">
+    <img src="@Url.Content("~/Content/img/mascot-wave.svg")" alt="" width="64" height="67" />
+    <div class="flex-grow-1"><strong>準備好了嗎？</strong><br /><span class="text-ink-2">三分鐘完成申請，審核通過就上架。</span></div>
+    <a class="btn btn-brand btn-lg" href="@joinUrl">免費上架</a>
+</div>

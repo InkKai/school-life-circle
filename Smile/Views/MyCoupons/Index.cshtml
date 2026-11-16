@@ -1,0 +1,65 @@
+﻿@model List<UserCoupon>
+@{
+    ViewBag.Title = "我的優惠券";
+    var status = (string)ViewBag.Status;
+    var tabs = new[] { new[] { "available", "可使用" }, new[] { "used", "已使用" }, new[] { "expired", "已過期" } };
+}
+
+<h1 class="visually-hidden">我的優惠券</h1>
+@Html.Partial("_Segmented", new[] { new[] { "優惠列表", Url.Action("Index", "Coupons"), "0" }, new[] { "我的優惠券", Url.Action("Index", "MyCoupons"), "1" } }, new ViewDataDictionary { { "label", "優惠券分頁" } })
+
+<nav aria-label="優惠券狀態" class="pill-tabs mb-3">
+    @foreach (var t in tabs)
+    {
+        <a href="@Url.Action("Index", new { status = t[0] })" class="@(status == t[0] ? "on" : "")" @(status == t[0] ? "aria-current=page" : "")>@t[1]</a>
+    }
+</nav>
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <img class="mascot" src="@Url.Content("~/Content/img/mascot-sleep.svg")" alt="" />
+        <p>這裡還是空的</p>
+        @if (status == "available")
+        {
+            <a class="btn btn-brand" href="@Url.Action("Index", "Coupons")">去領優惠</a>
+        }
+    </div>
+}
+<div class="row g-3">
+    @foreach (var uc in Model)
+    {
+        var c = uc.Coupon;
+        var usable = status == "available";
+        <div class="col-12 col-md-6 col-lg-4">
+            <article class="coupon @(usable ? "" : "coupon-off")">
+                <div class="stub">
+                    <span class="big">@Ui.CouponHeadline(c.Title)</span>
+                    <small>@(uc.Status == CouponStatus.Used ? "已使用" : usable ? "可使用" : "已過期")</small>
+                </div>
+                <div class="info">
+                    <p class="small mb-1 text-ink-2 text-truncate">@c.Store.Name</p>
+                    <h2 class="h3-like">@c.Title</h2>
+                    <p class="small mb-2 text-ink-2">
+                        @if (uc.Status == CouponStatus.Used)
+                        {
+                            <text>@uc.UsedAt.Value.ToString("MM/dd HH:mm") 已使用</text>
+                        }
+                        else
+                        {
+                            <text>到 @c.EndDate.ToString("MM/dd")</text>
+                        }
+                    </p>
+                    @if (usable)
+                    {
+                        <div class="d-flex gap-2 mt-auto">
+                            <a class="btn btn-sm btn-brand flex-fill" href="@Url.Action("Show", new { id = uc.Id })">出示 QR<span class="visually-hidden">：@c.Title</span></a>
+                            <a class="btn btn-sm btn-soft flex-fill" href="@Url.Action("Show", new { id = uc.Id })#share">傳給家人<span class="visually-hidden">：@c.Title</span></a>
+                            <a class="btn btn-sm btn-soft flex-fill" href="@Url.Action("Gift", "Friends", new { id = uc.Id })">送好友<span class="visually-hidden">：@c.Title</span></a>
+                        </div>
+                    }
+                </div>
+            </article>
+        </div>
+    }
+</div>

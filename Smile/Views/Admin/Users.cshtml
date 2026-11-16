@@ -1,0 +1,42 @@
+﻿@model List<User>
+@{ ViewBag.Title = "使用者管理"; }
+
+<h1 class="mb-3">平台管理</h1>
+@Html.Partial("_AdminNav")
+
+<form method="get" action="@Url.Action("Users")" class="d-flex gap-2 mb-3">
+    <label for="q" class="visually-hidden">搜尋使用者</label>
+    <input type="search" id="q" name="q" value="@ViewBag.Query" class="form-control" placeholder="搜尋電子郵件或名稱" />
+    <button type="submit" class="btn btn-smile text-nowrap">搜尋</button>
+</form>
+
+<div class="table-responsive">
+    <table class="table bg-white align-middle">
+        <thead><tr><th scope="col">名稱</th><th scope="col">電子郵件</th><th scope="col">學校</th><th scope="col">註冊日期</th><th scope="col">角色</th></tr></thead>
+        <tbody>
+            @foreach (var u in Model)
+            {
+                <tr>
+                    <td>@u.DisplayName</td>
+                    <td>@u.Email</td>
+                    <td>@(u.School != null ? u.School.ShortName : "—")</td>
+                    <td>@u.CreatedAt.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @using (Html.BeginForm("ChangeRole", "Admin", new { id = u.Id }, FormMethod.Post, new { @class = "d-flex gap-2" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <label for="role@(u.Id)" class="visually-hidden">@u.DisplayName 的角色</label>
+                            <select id="role@(u.Id)" name="role" class="form-select form-select-sm w-auto">
+                                @foreach (var r in new[] { AppRoles.Member, AppRoles.Merchant, AppRoles.Admin })
+                                {
+                                    <option value="@r" @(u.Role == r ? "selected" : "")>@AppRoles.Display(r)</option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-outline-smile">更新</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,18 @@
+﻿@model Campaign
+@{
+    var today = DateTime.Today;
+    var left = (Model.EndDate.Date - today).Days;
+    var count = ViewData["count"] as int? ?? 0;
+    var status = Model.IsRunning(today)
+        ? (left <= 0 ? "今天最後一天" : "活動進行中・剩 " + left + " 天")
+        : "即將開始・" + Model.StartDate.ToString("M/d") + " 起";
+}
+<a class="camp-banner" href="@Url.Action("Details", "Campaigns", new { id = Model.Id })" style="background:@Ui.ThemeGradient(Model.Theme)">
+    <span class="camp-text">
+        <span class="camp-chip">@status</span>
+        <strong class="camp-title">@Model.Title</strong>
+        <span class="camp-tag">@Model.Tagline</span>
+        <span class="camp-more">@(count > 0 ? count + " 張活動優惠 →" : "看活動 →")</span>
+    </span>
+    <img src="@Url.Content("~/Content/img/mascot-happy.svg")" alt="" width="88" height="92" />
+</a>

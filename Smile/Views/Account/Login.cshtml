@@ -1,0 +1,39 @@
+﻿@model LoginViewModel
+@{ ViewBag.Title = "登入"; }
+
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5">
+        <div class="panel p-4">
+            <img class="login-mascot" src="@Url.Content("~/Content/img/mascot-wave.svg")" alt="" />
+            <h1 class="h3 fw-bold text-center mb-1">歡迎回來</h1>
+            <p class="text-ink-2 text-center mb-3">登入後就能領券和集點</p>
+            @using (Html.BeginForm("Login", "Account", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.ReturnUrl)
+                @Html.ValidationSummary(true, "", new { @class = "alert alert-danger", role = "alert" })
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Email, new { @class = "form-label fw-semibold" })
+                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control form-control-lg", type = "email", autocomplete = "email" })
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Password, new { @class = "form-label fw-semibold" })
+                    @Html.PasswordFor(m => m.Password, new { @class = "form-control form-control-lg", autocomplete = "current-password" })
+                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                </div>
+                <div class="form-check mb-3">
+                    @Html.CheckBoxFor(m => m.RememberMe, new { @class = "form-check-input" })
+                    @Html.LabelFor(m => m.RememberMe, new { @class = "form-check-label" })
+                </div>
+                <button type="submit" class="btn btn-brand btn-lg w-100">登入</button>
+            }
+            <div class="d-flex flex-wrap justify-content-between gap-2 mt-3">
+                <span>還沒有帳號？@Html.ActionLink("免費註冊", "Register")</span>
+                <a href="@Url.Action("Browse", "Home")">先逛逛 →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts { @Scripts.Render("~/bundles/jqueryval") }

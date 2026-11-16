@@ -1,0 +1,168 @@
+﻿@model MemberCardViewModel
+@{
+    ViewBag.Title = "我的";
+    var u = Model.User;
+    var spaced = u.MemberCode.Substring(0, 4) + " " + u.MemberCode.Substring(4, 3) + " " + u.MemberCode.Substring(7);
+    var lv = Model.Level;
+    var earnedCount = Model.Badges.Count(b => b.Earned);
+}
+
+<section class="level-card mb-3" aria-label="等級與徽章">
+    <div class="d-flex align-items-center gap-3">
+        <span class="avatar lv" aria-hidden="true">@u.DisplayName.Substring(0, 1)<span class="lv-no">@lv.Level</span></span>
+        <div class="flex-grow-1 min-w-0">
+            <h1 id="lvName" class="h4 fw-bold mb-0 text-truncate">@u.DisplayName</h1>
+            <p class="mb-1">Lv.@lv.Level <strong>@lv.Title</strong>・@lv.Xp 點</p>
+            <div class="progress lv-bar" role="progressbar" aria-label="升級進度" aria-valuenow="@lv.Percent" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar" style="width:@lv.Percent%"></div>
+            </div>
+            <p class="small text-ink-2 mb-0 mt-1">@(lv.NextXp.HasValue ? "再 " + (lv.NextXp.Value - lv.Xp) + " 點升級「" + lv.NextTitle + "」" : "已經是最高等級了！")</p>
+        </div>
+    </div>
+    <h2 id="badgeTitle" class="h6 fw-bold mt-3 mb-2">徽章 <span class="text-ink-2 fw-normal">@earnedCount / @Model.Badges.Count</span></h2>
+    @* 徽章可以左右捲動；tabindex 讓鍵盤也能聚焦後用方向鍵捲動 *@
+    <ul class="badge-row h-scroll" tabindex="0" aria-labelledby="badgeTitle">
+        @foreach (var b in Model.Badges)
+        {
+            <li class="badge-item @(b.Earned ? "on" : "")">
+                <span class="badge-ico" style="@(b.Earned ? "background:" + b.Def.Color : "")">@Ui.Ic(b.Earned ? b.Def.Icon : "lock")</span>
+                <span class="badge-name">@b.Def.Name</span>
+                <span class="badge-hint">@if (b.Earned) {<time datetime="@b.EarnedAt.Value.ToString("yyyy-MM-dd")">@b.EarnedAt.Value.ToString("yyyy/M/d") 獲得</time>} else {@b.Def.Hint}</span>
+            </li>
+        }
+    </ul>
+    <p class="small text-ink-2 mb-0">領券、到店使用、交朋友都會累積點數。點數只用來升級，不能折抵消費。</p>
+</section>
+
+<nav class="me-grid mb-4" aria-label="我的功能">
+    <a href="@Url.Action("Index", "CheckIn")">@Ui.Ic("gift")簽到抽抽樂</a>
+    <a href="@Url.Action("Index", "MyCoupons")">@Ui.Ic("ticket")我的優惠券</a>
+    <a href="@Url.Action("Index", "Favorites")">@Ui.Ic("heart")收藏</a>
+    <a href="#stampTitle">@Ui.Ic("star")集點卡</a>
+    <a href="@Url.Action("Index", "Friends")">@Ui.Ic("users")好友</a>
+    <a href="@Url.Action("Settings", "Account")">@Ui.Ic("gear")帳號設定</a>
+    @if (User.IsInRole(AppRoles.Merchant))
+    {
+        <a href="@Url.Action("Index", "Merchant")">@Ui.Ic("store")店家後台</a>
+        <a href="@Url.Action("Pos", "Merchant")">@Ui.Ic("receipt")POS 收銀</a>
+    }
+    @if (User.IsInRole(AppRoles.Admin))
+    {
+        <a href="@Url.Action("Stores", "Admin")">@Ui.Ic("gear")平台管理</a>
+    }
+    <a href="@Url.Action("Index", "Home", new { tour = 1 })">@Ui.Ic("compass")重看導覽</a>
+    <a href="@Url.Action("Tutorial", "Home")">@Ui.Ic("book")使用教學</a>
+</nav>
+
+<h2 class="h5 fw-bold">會員卡</h2>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <section class="member-card mb-3" aria-labelledby="cardTitle">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="small mb-0 opacity-75">學區生活圈 會員卡</p>
+                    <p id="cardTitle" class="h4 fw-bold mb-0">@u.DisplayName</p>
+                </div>
+                <img src="@Url.Content("~/Content/img/mascot-happy.svg")" alt="" width="56" height="58" />
+            </div>
+            <div class="qr-box my-3"><div id="memberQr" role="img" aria-label="會員卡 QR Code，會員編號 @u.MemberCode"></div></div>
+            <p class="text-center mb-0 small opacity-75">會員編號（掃不到時念給店員聽）</p>
+            <p class="text-center code-text mb-0">@spaced</p>
+        </section>
+        <p class="text-ink-2 small">結帳時給店員掃，就能集點。</p>
+
+        <section class="panel mb-3" aria-labelledby="carrierTitle">
+            <h2 id="carrierTitle" class="h5 fw-bold">@Ui.Ic("receipt") 手機條碼載具</h2>
+            @if (string.IsNullOrEmpty(u.CarrierCode))
+            {
+                <p class="mb-2 text-ink-2">還沒設定，發票存載具不用拿紙本。</p>
+                <a class="btn btn-soft" href="@Url.Action("Settings", "Account")">到帳號設定填寫載具</a>
+            }
+            else
+            {
+                <div class="barcode-box"><svg id="carrierBarcode" role="img" aria-label="手機條碼載具 @u.CarrierCode"></svg></div>
+                <p class="text-center code-text mb-1">@u.CarrierCode</p>
+                <p class="small text-ink-2 mb-0">發票由店家的收銀機開立並存入你的載具，學區生活圈只幫你顯示條碼，不經手發票或付款。<a href="@Url.Action("Settings", "Account")">修改</a></p>
+            }
+        </section>
+    </div>
+
+    <div class="col-lg-7">
+        <section aria-labelledby="stampTitle" class="mb-4">
+            <h2 id="stampTitle" class="h5 fw-bold">我的集點卡</h2>
+            @if (!Model.Cards.Any())
+            {
+                <div class="empty-state"><img class="mascot" src="@Url.Content("~/Content/img/mascot-sleep.svg")" alt="" /><p>還沒有集點卡，到下面的店出示會員卡就會開始集</p></div>
+            }
+            @foreach (var c in Model.Cards)
+            {
+                var goal = c.Store.StampGoal;
+                <article class="panel mb-3">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <span class="cat-ico d-inline-flex align-items-center justify-content-center rounded-4 p-1" style="width:48px;height:48px;background:@Ui.Tint(c.Store.Category)">@Ui.Art(c.Store)</span>
+                        <div class="flex-grow-1">
+                            <h3 class="h6 fw-bold mb-0"><a href="@Url.Action("Details", "Stores", new { id = c.StoreId })">@c.Store.Name</a></h3>
+                            @if (goal > 0)
+                            {
+                                <p class="small text-ink-2 mb-0">集滿 @goal 點換「@c.Store.StampReward」・已兌換 @c.RewardsRedeemed 次</p>
+                            }
+                            else
+                            {
+                                <p class="small text-ink-2 mb-0">這間店目前暫停集點，點數會保留。</p>
+                            }
+                        </div>
+                        <p class="mb-0 text-nowrap"><strong class="fs-4">@c.Stamps</strong>@(goal > 0 ? " / " + goal : "") 點</p>
+                    </div>
+                    @if (goal > 0)
+                    {
+                        <div class="stamp-grid" role="img" aria-label="已集 @c.Stamps 點，共需 @goal 點">
+                            @for (int i = 1; i <= Math.Max(goal, c.Stamps); i++)
+                            {
+                                <span class="stamp @(i <= c.Stamps ? "on" : "")" aria-hidden="true">@(i <= c.Stamps ? "★" : "")</span>
+                            }
+                        </div>
+                        if (c.Stamps >= goal)
+                        {
+                            <p class="chip chip-green mt-2 mb-0">已集滿，到店出示會員卡即可兌換</p>
+                        }
+                    }
+                </article>
+            }
+        </section>
+
+        @if (Model.StampStores.Any())
+        {
+            <section aria-labelledby="joinTitle">
+                <h2 id="joinTitle" class="h5 fw-bold">這些店可以集點</h2>
+                <div class="row g-2">
+                    @foreach (var s in Model.StampStores)
+                    {
+                        <div class="col-sm-6">
+                            <a class="panel d-flex align-items-center gap-2 text-decoration-none h-100" href="@Url.Action("Details", "Stores", new { id = s.Id })">
+                                <span style="width:44px;height:44px;flex-shrink:0">@Ui.Art(s)</span>
+                                <span><strong class="text-body">@s.Name</strong><br /><small class="text-ink-2">集滿 @s.StampGoal 點換「@s.StampReward」</small></span>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        new QRCode(document.getElementById('memberQr'), { text: '@u.MemberCode', width: 220, height: 220 });
+        document.querySelectorAll('#memberQr img, #memberQr canvas').forEach(function (el) { el.setAttribute('alt', ''); el.setAttribute('aria-hidden', 'true'); });
+    </script>
+    @if (!string.IsNullOrEmpty(u.CarrierCode))
+    {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
+        <script>
+            // 財政部手機條碼使用 Code 39
+            JsBarcode('#carrierBarcode', '@u.CarrierCode', { format: 'CODE39', displayValue: false, height: 70, width: 2, margin: 8 });
+        </script>
+    }
+}

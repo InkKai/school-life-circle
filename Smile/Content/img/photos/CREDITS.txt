@@ -1,0 +1,15 @@
+示範店家的示意照片，全部來自 Unsplash（https://unsplash.com/license，可免費商用、免署名）。
+下載時以 800x600 裁切。這些照片只是示意，不是示範店家（虛構）的真實照片。
+
+bento.jpg        https://images.unsplash.com/photo-1594955332421-2033cfd867b4
+noodle.jpg       https://images.unsplash.com/photo-1631709497146-a239ef373cf1
+brunch.jpg       https://images.unsplash.com/photo-1578172397201-efaa902004a3
+bubbletea.jpg    https://images.unsplash.com/photo-1558857563-b371033873b8
+shavedice.jpg    https://images.unsplash.com/photo-1768204042188-f5a337e61ca5
+vintage.jpg      https://images.unsplash.com/photo-1600709487035-f5d21265155d
+fashion.jpg      https://images.unsplash.com/photo-1441984904996-e0b6ba687e04
+shoes.jpg        https://images.unsplash.com/photo-1633464129147-777bdcc97c1d
+accessories.jpg  https://images.unsplash.com/photo-1766560360281-d3c264734a1f
+drugstore.jpg    https://images.unsplash.com/photo-1789108978116-2763682414a4
+glasses.jpg      https://images.unsplash.com/photo-1759910546772-73e4bb7fdadd
+stationery.jpg   https://images.unsplash.com/photo-1568871391149-449702439177

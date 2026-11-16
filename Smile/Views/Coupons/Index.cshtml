@@ -1,0 +1,39 @@
+﻿@model List<Coupon>
+@{
+    ViewBag.Title = "優惠券";
+    var claimed = (int[])ViewBag.Claimed;
+    var filter = (string)ViewBag.Filter ?? "";
+    var tabs = new[] { new[] { "", "全部" }, new[] { "expiring", "快到期" }, new[] { "nearby", "附近" } };
+}
+
+<h1 class="visually-hidden">優惠列表</h1>
+@Html.Partial("_Segmented", new[] { new[] { "優惠列表", Url.Action("Index", "Coupons"), "1" }, new[] { "我的優惠券", Url.Action("Index", "MyCoupons"), "0" } }, new ViewDataDictionary { { "label", "優惠券分頁" } })
+
+@{ var camp = (Campaign)ViewBag.Campaign; }
+@if (camp != null)
+{
+    <a class="camp-strip mb-3" href="@Url.Action("Details", "Campaigns", new { id = camp.Id })" style="background:@Ui.ThemeGradient(camp.Theme)">
+        @Ui.Ic("mega", "ic fs-5")
+        <span class="flex-grow-1"><strong>@camp.Title</strong>・@camp.Tagline</span>
+        <span aria-hidden="true">→</span>
+    </a>
+}
+
+<nav aria-label="優惠篩選" class="pill-tabs mb-3">
+    @foreach (var t in tabs)
+    {
+        <a href="@Url.Action("Index", new { filter = t[0] == "" ? null : t[0] })" class="@(filter == t[0] ? "on" : "")" @(filter == t[0] ? "aria-current=page" : "")>@t[1]</a>
+    }
+</nav>
+
+@if (!Model.Any())
+{
+    <div class="empty-state"><img class="mascot" src="@Url.Content("~/Content/img/mascot-sleep.svg")" alt="" /><p>目前沒有符合的優惠</p></div>
+}
+<h2 class="visually-hidden">優惠券</h2>
+<div class="row g-3">
+    @foreach (var c in Model)
+    {
+        <div class="col-12 col-md-6 col-lg-4">@Html.Partial("_CouponCard", c, new ViewDataDictionary { { "claimed", claimed.Contains(c.Id) } })</div>
+    }
+</div>

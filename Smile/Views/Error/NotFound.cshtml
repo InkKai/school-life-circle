@@ -1,0 +1,12 @@
+﻿@{ ViewBag.Title = "找不到這一頁"; }
+
+<div class="err-page">
+    <img src="@Url.Content("~/Content/img/mascot-sleep.svg")" alt="" />
+    <p class="err-code" aria-hidden="true">404</p>
+    <h1 class="h3 fw-bold">小圈找不到這一頁</h1>
+    <p class="text-ink-2">網址可能打錯了，或是這個頁面已經下架。</p>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+        <a class="btn btn-brand" href="@Url.Action("Index", "Home")">回首頁</a>
+        <a class="btn btn-soft" href="@Url.Action("Index", "Stores")">去找店</a>
+    </div>
+</div>

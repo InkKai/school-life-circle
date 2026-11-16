@@ -1,0 +1,39 @@
+﻿@model Product
+@{
+    var store = (Store)ViewBag.Store;
+    ViewBag.Title = Model.Id == 0 ? "新增商品" : "修改商品";
+}
+
+<h1 class="mb-3">@store.Name</h1>
+@Html.Partial("_MerchantNav", store)
+<h2 class="h4">@ViewBag.Title</h2>
+@using (Html.BeginForm("SaveProduct", "Merchant", FormMethod.Post, new { @class = "card card-body" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.StoreId)
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Name, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+    </div>
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Price, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.Price, new { @class = "form-control", type = "number", min = "0" })
+        @Html.ValidationMessageFor(m => m.Price, "", new { @class = "text-danger" })
+    </div>
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Description, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.Description, new { @class = "form-control" })
+    </div>
+    <div class="form-check mb-3">
+        @Html.CheckBoxFor(m => m.IsAvailable, new { @class = "form-check-input" })
+        @Html.LabelFor(m => m.IsAvailable, new { @class = "form-check-label" })
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-smile btn-lg">儲存</button>
+        @Html.ActionLink("取消", "Products", new { storeId = store.Id }, new { @class = "btn btn-outline-secondary btn-lg" })
+    </div>
+}
+
+@section scripts { @Scripts.Render("~/bundles/jqueryval") }
